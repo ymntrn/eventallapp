@@ -1,39 +1,28 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Category, DateFilter } from './types';
+import { useCallback, useEffect, useState } from 'react';
+import { filterEvents, loadData, type AppData } from './lib/data';
+import { actions, useAppState, type Preferences } from './lib/store';
+import { parseRoute, useHash } from './lib/router';
+import { useTheme } from './lib/theme';
+import { useToast } from './lib/toast';
 import { t } from './i18n/tr';
-import { filterEvents, groupByVenue, loadData, type AppData } from './lib/data';
-import { isInAnkara } from './lib/geo';
-import { MapView, type MapViewHandle } from './components/MapView';
-import { FilterBar } from './components/FilterBar';
-import { VenueSheet } from './components/VenueSheet';
-import { SearchBox } from './components/SearchBox';
-import { Legend } from './components/Legend';
-
-const DEFAULT_DATE: DateFilter = 'next7';
-const BANNER_KEY = 'eventall.sampleBannerDismissed';
-
-function readFlag(key: string): boolean {
-  try {
-    return localStorage.getItem(key) === '1';
-  } catch {
-    return false;
-  }
-}
+import { MapPage } from './pages/MapPage';
+import { EventPage } from './pages/EventPage';
+import { PerformerPage } from './pages/PerformerPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { SettingsPage } from './pages/SettingsPage';
+import { LoginPage } from './pages/LoginPage';
+import { BottomNav, type Tab } from './components/BottomNav';
+import { FilterSheet } from './components/FilterSheet';
 
 export default function App() {
+  const state = useAppState();
+  const theme = useTheme(state.settings.theme);
+  const route = parseRoute(useHash());
+  const toast = useToast();
   const [data, setData] = useState<AppData | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [now, setNow] = useState(() => Date.now());
-  const [date, setDate] = useState<DateFilter>(DEFAULT_DATE);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [showAll, setShowAll] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [mapReady, setMapReady] = useState(false);
-  const [mapError, setMapError] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
-  const [locating, setLocating] = useState(false);
-  const [bannerHidden, setBannerHidden] = useState(() => readFlag(BANNER_KEY));
-  const mapRef = useRef<MapViewHandle>(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const load = useCallback(() => {
     setLoadError(false);
@@ -49,170 +38,81 @@ export default function App() {
     return () => clearInterval(id);
   }, []);
 
+  // Scroll sub-pages to the top on navigation.
   useEffect(() => {
-    if (!toast) return;
-    const id = setTimeout(() => setToast(null), 5000);
-    return () => clearTimeout(id);
-  }, [toast]);
+    document.querySelector('.page')?.scrollTo(0, 0);
+  }, [route.name, 'id' in route ? route.id : null]);
 
-  const upcoming = useMemo(
-    () => (data ? filterEvents(data.events, { date: 'all', categories: [] }, now) : []),
+  // First visit: ask what the user wants to see.
+  const onboarding = !state.onboarded && route.name === 'map' && data !== null;
+  const showFilters = filtersOpen || onboarding;
+
+  const countFor = useCallback(
+    (p: Preferences) => (data ? filterEvents(data.events, { date: p.date, categories: p.categories }, now).length : 0),
     [data, now],
   );
-  const filtered = useMemo(
-    () => (data ? filterEvents(data.events, { date, categories }, now) : []),
-    [data, date, categories, now],
-  );
-  const activeVenues = useMemo(() => groupByVenue(filtered), [filtered]);
-  const inactiveVenues = useMemo(() => {
-    if (!data || !showAll) return [];
-    const active = new Set(activeVenues.map((v) => v.venue.id));
-    return data.venues.filter((v) => !active.has(v.id));
-  }, [data, showAll, activeVenues]);
 
-  const selectedVenue = data?.venues.find((v) => v.id === selectedId) ?? null;
-  const selectedEvents = useMemo(
-    () => filtered.filter((e) => e.venueId === selectedId),
-    [filtered, selectedId],
-  );
-
-  const selectVenue = useCallback(
-    (id: string) => {
-      const venue = data?.venues.find((v) => v.id === id);
-      if (!venue) return;
-      setSelectedId(id);
-      mapRef.current?.flyTo(venue.lat, venue.lng, { forPanel: true });
-    },
-    [data],
-  );
-  const closeSheet = useCallback(() => setSelectedId(null), []);
-
-  const resetFilters = () => {
-    setDate('all');
-    setCategories([]);
-  };
-
-  const locate = () => {
-    if (!('geolocation' in navigator)) {
-      setToast(t.geoUnsupported);
-      return;
-    }
-    setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLocating(false);
-        const { latitude, longitude } = pos.coords;
-        if (!isInAnkara(latitude, longitude)) {
-          setToast(t.geoOutside);
-          return;
-        }
-        mapRef.current?.setUserLocation(latitude, longitude);
-        mapRef.current?.flyTo(latitude, longitude, { zoom: 14 });
-      },
-      (err) => {
-        setLocating(false);
-        setToast(err.code === err.PERMISSION_DENIED ? t.geoDenied : t.geoUnavailable);
-      },
-      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 },
-    );
-  };
-
-  const dismissBanner = () => {
-    setBannerHidden(true);
-    try {
-      localStorage.setItem(BANNER_KEY, '1');
-    } catch {
-      /* private mode: ignore */
-    }
-  };
-
-  const isEmpty = data !== null && filtered.length === 0;
+  const onMap = route.name === 'map';
+  const tab: Tab = onMap ? 'map' : route.name === 'profile' ? 'profile' : route.name === 'settings' ? 'settings' : null;
 
   return (
-    <div className={selectedVenue ? 'app has-sheet' : 'app'}>
-      <header className="topbar">
-        <h1 className="brand">
-          {t.appName}
-          <span className="brand__tagline">{t.tagline}</span>
-        </h1>
-        <SearchBox venues={data?.venues ?? []} events={upcoming} onPick={selectVenue} />
-      </header>
-
-      <FilterBar date={date} categories={categories} onDateChange={setDate} onCategoriesChange={setCategories} />
-
-      <main className="map-wrap">
-        {!mapError && (
-          <MapView
-            ref={mapRef}
-            activeVenues={activeVenues}
-            inactiveVenues={inactiveVenues}
-            selectedVenueId={selectedId}
-            onSelectVenue={selectVenue}
-            onReady={() => setMapReady(true)}
-            onError={() => setMapError(true)}
-          />
-        )}
-
-        {(mapError || loadError) && (
-          <div className="overlay" role="alert">
-            <p>{mapError ? t.mapError : t.dataError}</p>
-            {loadError && (
-              <button type="button" className="btn" onClick={load}>
-                {t.retry}
-              </button>
-            )}
-          </div>
-        )}
-        {!mapError && !loadError && (!mapReady || !data) && (
-          <div className="overlay" role="status">
-            <span className="spinner" aria-hidden="true" />
-            <p>{!data ? t.loadingData : t.loadingMap}</p>
-          </div>
-        )}
-
-        {!bannerHidden && (
-          <div className="banner">
-            <span>{t.sampleDataBanner}</span>
-            <button type="button" className="icon-btn icon-btn--small" onClick={dismissBanner} aria-label={t.dismiss}>
-              <span aria-hidden="true">✕</span>
-            </button>
-          </div>
-        )}
-
-        <p className="count" aria-live="polite">
-          {data && !isEmpty ? t.eventsFound(filtered.length, activeVenues.length) : ''}
-        </p>
-
-        {isEmpty && mapReady && (
-          <div className="empty" role="status">
-            <h2>{t.emptyTitle}</h2>
-            <p>{t.emptyHint}</p>
-            <button type="button" className="btn btn--primary" onClick={resetFilters}>
-              {t.resetFilters}
-            </button>
-          </div>
-        )}
-
-        <div className="map-controls">
-          <label className="switch">
-            <input type="checkbox" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} />
-            <span>{t.showAllVenues}</span>
-          </label>
-          <button type="button" className="btn btn--float" onClick={locate} disabled={locating} aria-busy={locating}>
-            <span aria-hidden="true">◎</span> {locating ? t.locating : t.nearMe}
-          </button>
-        </div>
-
-        <Legend />
-
-        {toast && (
-          <div className="toast" role="status">
-            {toast}
+    <div className={`app${onMap ? ' app--map' : ''}`}>
+      <BottomNav current={tab} />
+      <main className="app__main">
+        {/* The map stays mounted underneath other pages so it keeps its position. */}
+        <MapPage
+          data={data}
+          loadError={loadError}
+          onRetry={load}
+          now={now}
+          theme={theme}
+          venueId={route.name === 'map' ? route.venueId : undefined}
+          active={onMap && !showFilters}
+          onOpenFilters={() => setFiltersOpen(true)}
+        />
+        {!onMap && (
+          <div className="page-layer">
+            {data === null ? (
+              <div className="overlay" role="status">
+                <span className="spinner" aria-hidden="true" />
+                <p>{loadError ? t.dataError : t.loadingData}</p>
+              </div>
+            ) : route.name === 'event' ? (
+              <EventPage data={data} id={route.id} />
+            ) : route.name === 'performer' ? (
+              <PerformerPage data={data} id={route.id} now={now} />
+            ) : route.name === 'profile' ? (
+              <ProfilePage data={data} tab={route.tab} />
+            ) : route.name === 'settings' ? (
+              <SettingsPage onEditPrefs={() => setFiltersOpen(true)} />
+            ) : route.name === 'login' ? (
+              <LoginPage next={route.next} />
+            ) : null}
           </div>
         )}
       </main>
 
-      {selectedVenue && <VenueSheet venue={selectedVenue} events={selectedEvents} onClose={closeSheet} />}
+      {showFilters && (
+        <FilterSheet
+          initial={state.prefs}
+          countFor={countFor}
+          onboarding={onboarding}
+          onApply={(p) => {
+            actions.setPrefs(p);
+            setFiltersOpen(false);
+          }}
+          onClose={() => {
+            actions.markOnboarded();
+            setFiltersOpen(false);
+          }}
+        />
+      )}
+
+      {toast && (
+        <div className="toast" role="status">
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

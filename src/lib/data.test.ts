@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { EventItem, Venue } from '../types';
-import { dominantCategory, filterEvents, groupByVenue, joinEventsToVenues } from './data';
+import type { EventItem, Offer, Performer, Venue } from '../types';
+import { dominantCategory, filterEvents, groupByVenue, joinEventsToVenues, minPrice, sortOffers } from './data';
 
 const venue = (id: string): Venue => ({ id, name: id, type: 'theater', lat: 39.93, lng: 32.85, verified: false });
 const event = (id: string, venueId: string, startsAt: string, category: EventItem['category'] = 'rock'): EventItem => ({
@@ -9,8 +9,7 @@ const event = (id: string, venueId: string, startsAt: string, category: EventIte
   title: id,
   category,
   startsAt,
-  ticketUrl: 'https://www.biletix.com/',
-  ticketPlatform: 'Biletix',
+  offers: [{ platform: 'Biletix', url: 'https://www.biletix.com/', price: 100 }],
 });
 
 const venues = [venue('a'), venue('b'), venue('c')];
@@ -80,5 +79,32 @@ describe('dominantCategory', () => {
     expect(dominantCategory(joined)).toBe('rock');
     expect(dominantCategory(joined.slice(0, 2))).toBe('theater');
     expect(dominantCategory([])).toBeNull();
+  });
+});
+
+describe('performers join', () => {
+  it('attaches known performers and skips unknown ids', () => {
+    const performers: Performer[] = [{ id: 'p1', name: 'P1', kind: 'band' }];
+    const [e] = joinEventsToVenues([{ ...event('1', 'a', '2026-10-10T20:00:00+03:00'), performerIds: ['p1', 'ghost'] }], venues, performers);
+    expect(e.performers.map((p) => p.id)).toEqual(['p1']);
+    expect(e.minPrice).toBe(100);
+  });
+});
+
+describe('offers', () => {
+  const offers: Offer[] = [
+    { platform: 'Passo', url: 'https://www.passo.com.tr/', price: 300 },
+    { platform: 'Biletix', url: 'https://www.biletix.com/', price: 150, available: false },
+    { platform: 'Mobilet', url: 'https://mobilet.com/' },
+    { platform: 'Bubilet', url: 'https://www.bubilet.com.tr/', price: 250 },
+  ];
+
+  it('minPrice ignores sold-out and unpriced offers', () => {
+    expect(minPrice(offers)).toBe(250);
+    expect(minPrice([{ platform: 'Mobilet', url: 'https://mobilet.com/' }])).toBeNull();
+  });
+
+  it('sortOffers puts cheapest available first, unpriced next, sold-out last', () => {
+    expect(sortOffers(offers).map((o) => o.platform)).toEqual(['Bubilet', 'Passo', 'Mobilet', 'Biletix']);
   });
 });

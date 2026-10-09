@@ -4,6 +4,9 @@ import type {
   EventItem,
   EventWithVenue,
   EventsFile,
+  Offer,
+  Performer,
+  PerformersFile,
   Venue,
   VenueWithEvents,
   VenuesFile,
@@ -13,6 +16,7 @@ import { getDateRange, isInRange } from './dates';
 export interface AppData {
   venues: Venue[];
   events: EventWithVenue[];
+  performers: Performer[];
 }
 
 /**
@@ -21,15 +25,18 @@ export interface AppData {
  * same VenuesFile / EventsFile shapes.
  */
 export async function loadData(): Promise<AppData> {
-  const [venuesModule, eventsModule] = await Promise.all([
+  const [venuesModule, eventsModule, performersModule] = await Promise.all([
     import('../data/venues.json'),
     import('../data/events.json'),
+    import('../data/performers.json'),
   ]);
   const venuesFile = venuesModule.default as VenuesFile;
   const eventsFile = eventsModule.default as EventsFile;
+  const performersFile = performersModule.default as PerformersFile;
   return {
     venues: venuesFile.venues,
-    events: joinEventsToVenues(eventsFile.events, venuesFile.venues),
+    performers: performersFile.performers,
+    events: joinEventsToVenues(eventsFile.events, venuesFile.venues, performersFile.performers),
   };
 }
 
@@ -38,14 +45,22 @@ export async function loadData(): Promise<AppData> {
  * startsAt cannot be parsed are dropped (the validation script reports them).
  * Result is sorted by start time.
  */
-export function joinEventsToVenues(events: EventItem[], venues: Venue[]): EventWithVenue[] {
+export function joinEventsToVenues(
+  events: EventItem[],
+  venues: Venue[],
+  performers: Performer[] = [],
+): EventWithVenue[] {
   const byId = new Map(venues.map((v) => [v.id, v]));
+  const performerById = new Map(performers.map((p) => [p.id, p]));
   const joined: EventWithVenue[] = [];
   for (const e of events) {
     const venue = byId.get(e.venueId);
     const startsAtMs = Date.parse(e.startsAt);
     if (!venue || Number.isNaN(startsAtMs)) continue;
-    joined.push({ ...e, venue, startsAtMs });
+    const eventPerformers = (e.performerIds ?? [])
+      .map((id) => performerById.get(id))
+      .filter((p): p is Performer => p !== undefined);
+    joined.push({ ...e, venue, performers: eventPerformers, startsAtMs, minPrice: minPrice(e.offers ?? []) });
   }
   return joined.sort((a, b) => a.startsAtMs - b.startsAtMs);
 }
@@ -98,4 +113,29 @@ export function groupByVenue(events: EventWithVenue[]): VenueWithEvents[] {
     const sorted = [...list].sort((a, b) => a.startsAtMs - b.startsAtMs);
     return { venue: sorted[0].venue, events: sorted, dominantCategory: dominantCategory(sorted) };
   });
+}
+
+export function isAvailable(o: Offer): boolean {
+  return o.available !== false;
+}
+
+/** Lowest price among available offers that list a price. */
+export function minPrice(offers: Offer[]): number | null {
+  let best: number | null = null;
+  for (const o of offers) {
+    if (!isAvailable(o) || o.price === undefined) continue;
+    if (best === null || o.price < best) best = o.price;
+  }
+  return best;
+}
+
+/**
+ * Skyscanner-style ordering: available offers first, cheapest first, offers
+ * without a price after priced ones, sold-out offers last.
+ */
+export function sortOffers(offers: Offer[]): Offer[] {
+  const rank = (o: Offer) => (!isAvailable(o) ? 2 : o.price === undefined ? 1 : 0);
+  return [...offers].sort(
+    (a, b) => rank(a) - rank(b) || (a.price ?? Infinity) - (b.price ?? Infinity) || a.platform.localeCompare(b.platform),
+  );
 }

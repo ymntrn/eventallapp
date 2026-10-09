@@ -1,0 +1,20 @@
+{
+  "_note": "SAMPLE DATA. Invented performers for the prototype; any resemblance to real artists is unintended.",
+  "performers": [
+    { "id": "kuzey-ruzgari", "name": "Kuzey Rüzgârı", "kind": "band", "genre": "Akustik rock" },
+    { "id": "beton-cicekleri", "name": "Beton Çiçekleri", "kind": "band", "genre": "Alternatif rock" },
+    { "id": "gri-sokak", "name": "Gri Sokak", "kind": "band", "genre": "Punk rock" },
+    { "id": "deniz-aral", "name": "Deniz Aral", "kind": "musician", "genre": "Indie pop" },
+    { "id": "selin-ayaz", "name": "Selin Ayaz", "kind": "musician", "genre": "Pop" },
+    { "id": "mert-kalkan", "name": "Mert Kalkan", "kind": "musician", "genre": "Rap" },
+    { "id": "dj-gece-yarisi", "name": "DJ Gece Yarısı", "kind": "dj", "genre": "Techno" },
+    { "id": "frekans-kolektif", "name": "Frekans Kolektif", "kind": "dj", "genre": "Deneysel elektronik" },
+    { "id": "ece-tunali", "name": "Ece Tunalı", "kind": "comedian", "genre": "Stand-up" },
+    { "id": "kaan-yilmazer", "name": "Kaan Yılmazer", "kind": "comedian", "genre": "Stand-up" },
+    { "id": "dogaclama-ankara", "name": "Doğaçlama Ankara", "kind": "company", "genre": "Doğaçlama tiyatro" },
+    { "id": "sahne-atolyesi", "name": "Sahne Atölyesi", "kind": "company", "genre": "Tiyatro topluluğu" },
+    { "id": "baskent-oda-orkestrasi", "name": "Başkent Oda Orkestrası", "kind": "ensemble", "genre": "Klasik" },
+    { "id": "lale-caz-uclusu", "name": "Lale Caz Üçlüsü", "kind": "ensemble", "genre": "Caz" },
+    { "id": "aylin-erdem", "name": "Aylin Erdem", "kind": "musician", "genre": "Piyano" }
+  ]
+}

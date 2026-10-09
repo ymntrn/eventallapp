@@ -11,7 +11,9 @@ import {
   CATEGORIES,
   TICKET_PLATFORMS,
   VENUE_TYPES,
+  PERFORMER_KINDS,
   type EventsFile,
+  type PerformersFile,
   type VenuesFile,
 } from '../src/types.ts';
 import { ANKARA_BOUNDS, distanceMeters, isInAnkara } from '../src/lib/geo.ts';
@@ -35,6 +37,9 @@ function readJson<T>(rel: string): T | null {
 
 const venuesFile = readJson<VenuesFile>('src/data/venues.json');
 const eventsFile = readJson<EventsFile>('src/data/events.json');
+const performersFile = readJson<PerformersFile>('src/data/performers.json');
+const performers = Array.isArray(performersFile?.performers) ? performersFile.performers : [];
+if (performersFile && !Array.isArray(performersFile.performers)) errors.push('performers.json: missing "performers" array');
 const venues = Array.isArray(venuesFile?.venues) ? venuesFile.venues : [];
 const events = Array.isArray(eventsFile?.events) ? eventsFile.events : [];
 if (venuesFile && !Array.isArray(venuesFile.venues)) errors.push('venues.json: missing "venues" array');
@@ -79,6 +84,18 @@ for (let i = 0; i < venues.length; i++) {
   }
 }
 
+// --- Performers -----------------------------------------------------------
+const performerIds = new Set<string>();
+for (const [i, p] of performers.entries()) {
+  const where = `performer #${i} (${p.id ?? '?'})`;
+  if (typeof p.id !== 'string' || !SLUG.test(p.id)) errors.push(`${where}: id must be a lowercase ASCII slug`);
+  else if (performerIds.has(p.id)) errors.push(`${where}: duplicate id "${p.id}"`);
+  else performerIds.add(p.id);
+  if (typeof p.name !== 'string' || !p.name.trim()) errors.push(`${where}: missing name`);
+  if (!(PERFORMER_KINDS as readonly string[]).includes(p.kind))
+    errors.push(`${where}: invalid kind "${p.kind}" (allowed: ${PERFORMER_KINDS.join(', ')})`);
+}
+
 // --- Events ---------------------------------------------------------------
 const eventIds = new Set<string>();
 const now = Date.now();
@@ -97,15 +114,28 @@ for (const [i, e] of events.entries()) {
   if (typeof e.startsAt !== 'string' || !ISO_WITH_OFFSET.test(e.startsAt) || Number.isNaN(Date.parse(e.startsAt)))
     errors.push(`${where}: startsAt "${e.startsAt}" is not ISO 8601 with offset (e.g. 2026-10-10T21:00:00+03:00)`);
   else if (Date.parse(e.startsAt) < now) pastCount++;
-  if (!(TICKET_PLATFORMS as readonly string[]).includes(e.ticketPlatform))
-    errors.push(`${where}: invalid ticketPlatform "${e.ticketPlatform}"`);
-  try {
-    if (new URL(e.ticketUrl).protocol !== 'https:') errors.push(`${where}: ticketUrl must use https`);
-  } catch {
-    errors.push(`${where}: ticketUrl "${e.ticketUrl}" is not a valid URL`);
+  if (!Array.isArray(e.offers) || e.offers.length === 0) errors.push(`${where}: needs at least one offer`);
+  else {
+    const seen = new Set<string>();
+    for (const [k, o] of e.offers.entries()) {
+      const ow = `${where} offer #${k}`;
+      if (!(TICKET_PLATFORMS as readonly string[]).includes(o.platform))
+        errors.push(`${ow}: invalid platform "${o.platform}" (allowed: ${TICKET_PLATFORMS.join(', ')})`);
+      if (o.platform !== 'Other' && seen.has(o.platform)) warnings.push(`${ow}: ${o.platform} listed twice`);
+      seen.add(o.platform);
+      try {
+        if (new URL(o.url).protocol !== 'https:') errors.push(`${ow}: url must use https`);
+      } catch {
+        errors.push(`${ow}: url "${o.url}" is not a valid URL`);
+      }
+      if (o.price !== undefined && (typeof o.price !== 'number' || o.price < 0))
+        errors.push(`${ow}: price must be a non-negative number`);
+      if (o.available !== undefined && typeof o.available !== 'boolean')
+        errors.push(`${ow}: available must be true or false`);
+    }
   }
-  if (e.priceFrom !== undefined && (typeof e.priceFrom !== 'number' || e.priceFrom < 0))
-    errors.push(`${where}: priceFrom must be a non-negative number`);
+  for (const pid of e.performerIds ?? [])
+    if (!performerIds.has(pid)) errors.push(`${where}: performerId "${pid}" does not exist in performers.json`);
 }
 if (pastCount > 0) warnings.push(`${pastCount} event(s) are in the past and will not be shown`);
 
@@ -115,7 +145,7 @@ if (unverified > 0) warnings.push(`${unverified} of ${venues.length} venues have
 
 console.log('Eventall data validation');
 console.log('========================');
-console.log(`Venues: ${venues.length}  |  Events: ${events.length}  |  Venues with events: ${usedVenues.size}`);
+console.log(`Venues: ${venues.length}  |  Events: ${events.length}  |  Performers: ${performers.length}  |  Venues with events: ${usedVenues.size}`);
 console.log(`Unverified venues: ${unverified}`);
 console.log('');
 console.log(`Venues closer than ${CLUSTER_DISTANCE_M} m: ${close.length}`);

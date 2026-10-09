@@ -1,24 +1,29 @@
 import { useId, useMemo, useState } from 'react';
-import type { EventWithVenue, Venue } from '../types';
+import type { EventWithVenue, Performer, Venue } from '../types';
 import { t } from '../i18n/tr';
 import { foldTurkish } from '../lib/slug';
 import { formatDate } from '../lib/dates';
+import { navigate, paths } from '../lib/router';
+import { IconClose, IconSearch } from './icons';
 
 const MAX_RESULTS = 8;
 
 type Result =
   | { kind: 'venue'; key: string; venue: Venue }
-  | { kind: 'event'; key: string; event: EventWithVenue };
+  | { kind: 'event'; key: string; event: EventWithVenue }
+  | { kind: 'performer'; key: string; performer: Performer };
 
 interface Props {
   venues: Venue[];
   /** Upcoming events (not narrowed by the filters). */
   events: EventWithVenue[];
-  onPick(venueId: string): void;
+  performers: Performer[];
+  /** Venue results stay on the map; events and performers open their page. */
+  onPickVenue(venueId: string): void;
 }
 
 /** Accessible combobox: type, arrow keys to move, Enter to pick, Escape to clear. */
-export function SearchBox({ venues, events, onPick }: Props) {
+export function SearchBox({ venues, events, performers, onPickVenue }: Props) {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
@@ -31,17 +36,26 @@ export function SearchBox({ venues, events, onPick }: Props) {
     for (const v of venues) {
       if (foldTurkish(v.name).includes(q)) out.push({ kind: 'venue', key: `v-${v.id}`, venue: v });
     }
+    for (const p of performers) {
+      if (foldTurkish(p.name).includes(q)) out.push({ kind: 'performer', key: `p-${p.id}`, performer: p });
+    }
     for (const e of events) {
       if (out.length >= MAX_RESULTS) break;
-      if (foldTurkish(e.title).includes(q)) out.push({ kind: 'event', key: `e-${e.id}`, event: e });
+      const hay = foldTurkish([e.title, ...e.performers.map((p) => p.name)].join(' '));
+      if (hay.includes(q)) out.push({ kind: 'event', key: `e-${e.id}`, event: e });
     }
     return out.slice(0, MAX_RESULTS);
-  }, [query, venues, events]);
+  }, [query, venues, events, performers]);
 
   const pick = (r: Result) => {
-    onPick(r.kind === 'venue' ? r.venue.id : r.event.venueId);
     setOpen(false);
-    setQuery(r.kind === 'venue' ? r.venue.name : r.event.title);
+    if (r.kind === 'venue') {
+      setQuery(r.venue.name);
+      onPickVenue(r.venue.id);
+    } else {
+      setQuery('');
+      navigate(r.kind === 'event' ? paths.event(r.event.id) : paths.performer(r.performer.id));
+    }
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -66,6 +80,9 @@ export function SearchBox({ venues, events, onPick }: Props) {
 
   return (
     <div className="search" role="search">
+      <span className="search__icon" aria-hidden="true">
+        <IconSearch />
+      </span>
       <label htmlFor={`${listId}-input`} className="visually-hidden">
         {t.searchLabel}
       </label>
@@ -101,7 +118,7 @@ export function SearchBox({ venues, events, onPick }: Props) {
             setOpen(false);
           }}
         >
-          <span aria-hidden="true">✕</span>
+          <IconClose size={18} />
         </button>
       )}
       {showList && (
@@ -121,14 +138,17 @@ export function SearchBox({ venues, events, onPick }: Props) {
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => pick(r)}
               >
-                <span className="search__kind">{r.kind === 'venue' ? t.searchVenue : t.searchEvent}</span>
+                <span className="search__kind">
+                  {r.kind === 'venue' ? t.searchVenue : r.kind === 'event' ? t.searchEvent : t.searchPerformer}
+                </span>
                 <span className="search__label">
-                  {r.kind === 'venue' ? r.venue.name : r.event.title}
+                  {r.kind === 'venue' ? r.venue.name : r.kind === 'event' ? r.event.title : r.performer.name}
                   {r.kind === 'event' && (
                     <small>
-                      {r.event.venue.name} · {formatDate(r.event.startsAtMs)}
+                      {r.event.venue.name}, {formatDate(r.event.startsAtMs)}
                     </small>
                   )}
+                  {r.kind === 'performer' && <small>{t.performerKinds[r.performer.kind]}</small>}
                 </span>
               </li>
             ))

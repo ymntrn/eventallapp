@@ -4,6 +4,9 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? 'dev'),
+  },
   plugins: [
     react(),
     VitePWA({
@@ -19,7 +22,7 @@ export default defineConfig({
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#ffffff',
-        theme_color: '#1f2937',
+        theme_color: '#ffffff',
         icons: [
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
@@ -32,11 +35,11 @@ export default defineConfig({
         globPatterns: ['**/*.{js,mjs,css,html,svg,png,webmanifest}'],
         runtimeCaching: [
           {
-            // Cache viewed OSM tiles for a short time. Respect OSM tile usage policy: no bulk prefetch.
-            urlPattern: /^https:\/\/tile\.openstreetmap\.org\/.*/,
+            // Cache viewed basemap tiles for a short time. No bulk prefetch.
+            urlPattern: /^https:\/\/tiles\.openfreemap\.org\/.*/,
             handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: 'osm-tiles',
+              cacheName: 'map-tiles',
               expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 7 },
               cacheableResponse: { statuses: [0, 200] },
             },

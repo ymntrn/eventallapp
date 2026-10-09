@@ -1,17 +1,22 @@
 import { useEffect, useRef } from 'react';
 import type { EventWithVenue, Venue } from '../types';
 import { t } from '../i18n/tr';
-import { CATEGORY_COLORS } from '../lib/categories';
 import { formatDate, formatPrice, formatTime } from '../lib/dates';
+import { paths } from '../lib/router';
+import { Link } from './Link';
+import { FavoriteButton } from './FavoriteButton';
+import { IconClose } from './icons';
 
 interface Props {
   venue: Venue;
   events: EventWithVenue[];
   onClose(): void;
+  /** Shown when the venue has no events in the current filter. */
+  onShowAllDates(): void;
 }
 
 /** Bottom sheet on mobile, side panel on desktop (see CSS). */
-export function VenueSheet({ venue, events, onClose }: Props) {
+export function VenueSheet({ venue, events, onClose, onShowAllDates }: Props) {
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -36,57 +41,57 @@ export function VenueSheet({ venue, events, onClose }: Props) {
           </h2>
           <p className="sheet__meta">
             {t.venueTypes[venue.type]}
-            {venue.address ? ` · ${venue.address}` : ''}
+            {venue.address ? `, ${venue.address}` : ''}
           </p>
           {!venue.verified && <p className="sheet__unverified">{t.unverifiedLocation}</p>}
         </div>
         <button type="button" className="icon-btn" onClick={onClose} aria-label={t.close}>
-          <span aria-hidden="true">✕</span>
+          <IconClose />
         </button>
       </header>
 
       {events.length === 0 ? (
-        <p className="sheet__empty">{t.noEventsAtVenue}</p>
+        <div className="sheet__empty">
+          <p>{t.noEventsAtVenue}</p>
+          <button type="button" className="btn btn--secondary" onClick={onShowAllDates}>
+            {t.showAllDates}
+          </button>
+        </div>
       ) : (
-        <section aria-label={t.upcomingEvents}>
-          <ol className="event-list">
-            {events.map((e) => {
-              const platform = e.ticketPlatform === 'Other' ? t.otherPlatform : e.ticketPlatform;
-              return (
-                <li key={e.id} className="event">
-                  <div className="event__when">
-                    <time dateTime={e.startsAt}>
-                      <span className="event__date">{formatDate(e.startsAtMs)}</span>
-                      <span className="event__time">{formatTime(e.startsAtMs)}</span>
-                    </time>
-                  </div>
-                  <div className="event__body">
-                    <h3 className="event__title">{e.title}</h3>
-                    <p className="event__meta">
-                      <span className="tag" style={{ '--tag-color': CATEGORY_COLORS[e.category] } as React.CSSProperties}>
-                        {t.categories[e.category]}
-                      </span>
-                      {e.priceFrom !== undefined && (
-                        <span className="event__price">{t.priceFrom(formatPrice(e.priceFrom))}</span>
-                      )}
-                    </p>
-                    <a
-                      className="btn btn--primary"
-                      href={e.ticketUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={t.buyTicketLabel(e.title, platform)}
-                    >
-                      {t.buyTicket}
-                    </a>
-                    <p className="event__note">{t.purchaseNote(platform)}</p>
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
-        </section>
+        <ol className="event-rows" aria-label={t.upcomingEvents}>
+          {events.map((e) => (
+            <li key={e.id}>
+              <EventRow event={e} showVenue={false} />
+            </li>
+          ))}
+        </ol>
       )}
     </aside>
+  );
+}
+
+/** One tappable event line: date, title, price summary, favorite. Reused on profile and performer pages. */
+export function EventRow({ event: e, showVenue = true }: { event: EventWithVenue; showVenue?: boolean }) {
+  return (
+    <div className="event-row">
+      <Link className="event-row__link" href={paths.event(e.id)}>
+        <time className="event-row__when" dateTime={e.startsAt}>
+          <span>{formatDate(e.startsAtMs)}</span>
+          <strong>{formatTime(e.startsAtMs)}</strong>
+        </time>
+        <span className="event-row__body">
+          <span className="event-row__title">{e.title}</span>
+          <span className="event-row__meta">
+            {t.categories[e.category]}
+            {showVenue ? `, ${e.venue.name}` : ''}
+          </span>
+          <span className="event-row__price">
+            {e.minPrice !== null ? <strong>{t.fromPrice(formatPrice(e.minPrice))}</strong> : t.noPrice}
+            <span className="event-row__sellers">{t.sellers(e.offers.length)}</span>
+          </span>
+        </span>
+      </Link>
+      <FavoriteButton kind="event" id={e.id} name={e.title} />
+    </div>
   );
 }

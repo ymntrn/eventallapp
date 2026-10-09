@@ -1,17 +1,17 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import {
+  LngLatBounds,
   Map as MapLibreMap,
   Marker,
   NavigationControl,
   setWorkerUrl,
   type GeoJSONSource,
-  type StyleSpecification,
 } from 'maplibre-gl';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Feature, FeatureCollection, Point } from 'geojson';
 import type { Venue, VenueWithEvents } from '../types';
-import { CATEGORY_COLORS, DIMMED_COLOR } from '../lib/categories';
+import type { Theme } from '../lib/theme';
 import { ANKARA_CENTER, DEFAULT_ZOOM } from '../lib/geo';
 import { t } from '../i18n/tr';
 
@@ -20,29 +20,29 @@ setWorkerUrl(workerUrl);
 
 const SOURCE_ID = 'venues';
 
-const STYLE: StyleSpecification = {
-  version: 8,
-  sources: {
-    osm: {
-      type: 'raster',
-      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-      tileSize: 256,
-      maxzoom: 19,
-      attribution:
-        '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> katkıcıları',
-    },
-  },
-  layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
+/**
+ * OpenFreeMap vector styles: "Positron" (light, almost white) and "Dark".
+ * Free, no API key; data © OpenStreetMap. See README for production notes.
+ */
+const STYLE_URL: Record<Theme, string> = {
+  light: 'https://tiles.openfreemap.org/styles/positron',
+  dark: 'https://tiles.openfreemap.org/styles/dark',
 };
+
+/** Paper-white (or app-dark) background so the map matches the UI. */
+const BACKGROUND: Record<Theme, string> = { light: '#ffffff', dark: '#0f1115' };
 
 export interface MapViewHandle {
   flyTo(lat: number, lng: number, opts?: { zoom?: number; forPanel?: boolean }): void;
+  /** Zooms out/in so all given venues are visible. */
+  fitTo(venues: Venue[]): void;
   setUserLocation(lat: number, lng: number): void;
 }
 
 interface Props {
+  theme: Theme;
   activeVenues: VenueWithEvents[];
-  /** Venues without matching events; drawn dimmed when non-empty. */
+  /** Venues without matching events; drawn as small hollow dots. */
   inactiveVenues: Venue[];
   selectedVenueId: string | null;
   onSelectVenue(id: string): void;
@@ -50,7 +50,7 @@ interface Props {
   onError(): void;
 }
 
-type VenueFeature = Feature<Point, { venueId: string; name: string; color: string; count: number }>;
+type VenueFeature = Feature<Point, { venueId: string; name: string; count: number }>;
 
 function toGeoJSON(venues: VenueWithEvents[]): FeatureCollection<Point> {
   return {
@@ -59,33 +59,24 @@ function toGeoJSON(venues: VenueWithEvents[]): FeatureCollection<Point> {
       (v): VenueFeature => ({
         type: 'Feature',
         geometry: { type: 'Point', coordinates: [v.venue.lng, v.venue.lat] },
-        properties: {
-          venueId: v.venue.id,
-          name: v.venue.name,
-          color: v.dominantCategory ? CATEGORY_COLORS[v.dominantCategory] : DIMMED_COLOR,
-          count: v.events.length,
-        },
+        properties: { venueId: v.venue.id, name: v.venue.name, count: v.events.length },
       }),
     ),
   };
 }
 
-function pinElement(className: string, color: string, label: string, text: string): HTMLButtonElement {
+/** Pins are plain HTML buttons styled in CSS, so they follow the light/dark theme. */
+function pinElement(className: string, label: string, text: string): HTMLButtonElement {
   const el = document.createElement('button');
   el.type = 'button';
   el.className = className;
-  el.style.setProperty('--pin-color', color);
   el.setAttribute('aria-label', label);
   el.title = label;
-  if (className.startsWith('pin')) {
-    // 44px transparent hit area around a smaller visible dot.
-    const dot = document.createElement('span');
-    dot.className = 'pin__dot';
-    dot.textContent = text;
-    el.append(dot);
-  } else {
-    el.textContent = text;
-  }
+  // 44px transparent hit area around a smaller visible shape.
+  const shape = document.createElement('span');
+  shape.className = `${className.split(' ')[0]}__shape`;
+  shape.textContent = text;
+  el.append(shape);
   return el;
 }
 
@@ -93,20 +84,28 @@ function pinElement(className: string, color: string, label: string, text: strin
 const CLUSTER_MAX_ZOOM = 15;
 const SELECT_ZOOM = CLUSTER_MAX_ZOOM + 1;
 
+/** Map padding that keeps pins clear of the floating search bar, sheet and nav. */
+function viewPadding() {
+  const desktop = window.matchMedia('(min-width: 768px)').matches;
+  return desktop ? { top: 100, bottom: 60, left: 60, right: 60 } : { top: 110, bottom: 110, left: 40, right: 40 };
+}
+
 /**
  * Panel/sheet covers part of the map; shift the target so the pin lands in the
- * visible area (left of the desktop panel, above the mobile sheet at 50dvh).
+ * visible area (left of the desktop panel, above the mobile sheet).
  */
 function panelOffset(container: HTMLElement): [number, number] {
-  if (window.matchMedia('(min-width: 768px)').matches) return [-200, 0];
+  if (window.matchMedia('(min-width: 1024px)').matches) return [-210, 0];
   const rect = container.getBoundingClientRect();
-  const sheetTop = window.innerHeight * 0.5;
-  const visibleCenter = (rect.top + sheetTop) / 2;
+  // Visible band: below the floating search/filter block, above the sheet.
+  const top = document.querySelector('.map-top')?.getBoundingClientRect().bottom ?? rect.top;
+  const sheetTop = document.querySelector('.sheet')?.getBoundingClientRect().top ?? rect.top + rect.height * 0.5;
+  const visibleCenter = (top + sheetTop) / 2;
   return [0, Math.round(visibleCenter - (rect.top + rect.height / 2))];
 }
 
 export const MapView = forwardRef<MapViewHandle, Props>(function MapView(
-  { activeVenues, inactiveVenues, selectedVenueId, onSelectVenue, onReady, onError },
+  { theme, activeVenues, inactiveVenues, selectedVenueId, onSelectVenue, onReady, onError },
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -122,6 +121,10 @@ export const MapView = forwardRef<MapViewHandle, Props>(function MapView(
   selectedRef.current = selectedVenueId;
   const dataRef = useRef(activeVenues);
   dataRef.current = activeVenues;
+  const themeRef = useRef(theme);
+  themeRef.current = theme;
+  /** Theme of the style currently loaded in the map. */
+  const appliedTheme = useRef(theme);
 
   useImperativeHandle(ref, () => ({
     flyTo(lat, lng, opts = {}) {
@@ -133,6 +136,13 @@ export const MapView = forwardRef<MapViewHandle, Props>(function MapView(
         offset: opts.forPanel ? panelOffset(map.getContainer()) : [0, 0],
         essential: true,
       });
+    },
+    fitTo(venues) {
+      const map = mapRef.current;
+      if (!map || venues.length === 0) return;
+      const bounds = new LngLatBounds();
+      for (const v of venues) bounds.extend([v.lng, v.lat]);
+      map.fitBounds(bounds, { padding: viewPadding(), maxZoom: 14, duration: 700 });
     },
     setUserLocation(lat, lng) {
       const map = mapRef.current;
@@ -155,12 +165,12 @@ export const MapView = forwardRef<MapViewHandle, Props>(function MapView(
     try {
       map = new MapLibreMap({
         container: containerRef.current,
-        style: STYLE,
+        style: STYLE_URL[appliedTheme.current],
         center: ANKARA_CENTER,
         zoom: DEFAULT_ZOOM,
         minZoom: 8,
         maxZoom: 19,
-        attributionControl: { compact: false },
+        attributionControl: { compact: true },
         dragRotate: false,
         pitchWithRotate: false,
       });
@@ -170,7 +180,7 @@ export const MapView = forwardRef<MapViewHandle, Props>(function MapView(
       return;
     }
     map.touchZoomRotate.disableRotation();
-    map.addControl(new NavigationControl({ showCompass: false }), 'top-right');
+    map.addControl(new NavigationControl({ showCompass: false }), 'bottom-right');
     mapRef.current = map;
     const markers = markersRef.current;
 
@@ -187,7 +197,7 @@ export const MapView = forwardRef<MapViewHandle, Props>(function MapView(
           const n = p.point_count as number;
           key = `c:${clusterId}:${n}`;
           create = () => {
-            const el = pinElement('cluster', '#1f2937', t.clusterLabel(n), String(n));
+            const el = pinElement('cluster', t.clusterLabel(n), String(n));
             el.addEventListener('click', async () => {
               const source = map.getSource<GeoJSONSource>(SOURCE_ID);
               if (!source) return;
@@ -198,15 +208,14 @@ export const MapView = forwardRef<MapViewHandle, Props>(function MapView(
           };
         } else {
           const venueId = p.venueId as string;
-          const color = p.color as string;
           const count = p.count as number;
-          key = `v:${venueId}:${color}:${count}`;
+          key = `v:${venueId}:${count}`;
           create = () => {
-            const el = pinElement('pin', color, t.venuePinLabel(p.name as string, count), String(count));
+            const el = pinElement('pin', t.venuePinLabel(p.name as string, count), String(count));
             el.dataset.venueId = venueId;
             if (venueId === selectedRef.current) el.classList.add('is-selected');
             el.addEventListener('click', () => callbacks.current.onSelectVenue(venueId));
-            return new Marker({ element: el }).setLngLat(coords);
+            return new Marker({ element: el, anchor: 'bottom' }).setLngLat(coords);
           };
         }
         if (seen.has(key)) continue; // features repeat across tile boundaries
@@ -221,8 +230,14 @@ export const MapView = forwardRef<MapViewHandle, Props>(function MapView(
       }
     };
 
-    // 'style.load' (not 'load') so pins appear without waiting for every tile.
-    map.once('style.load', () => {
+    // Runs on the first style and again after every theme switch (setStyle drops
+    // custom sources). 'style.load' (not 'load') so pins appear before all tiles.
+    map.on('style.load', () => {
+      for (const layer of map.getStyle().layers) {
+        if (layer.type === 'background')
+          map.setPaintProperty(layer.id, 'background-color', BACKGROUND[appliedTheme.current]);
+      }
+      if (map.getSource(SOURCE_ID)) return;
       map.addSource(SOURCE_ID, {
         type: 'geojson',
         data: toGeoJSON(dataRef.current),
@@ -237,8 +252,10 @@ export const MapView = forwardRef<MapViewHandle, Props>(function MapView(
         source: SOURCE_ID,
         paint: { 'circle-radius': 1, 'circle-opacity': 0 },
       });
-      loadedRef.current = true;
-      callbacks.current.onReady();
+      if (!loadedRef.current) {
+        loadedRef.current = true;
+        callbacks.current.onReady();
+      }
     });
     map.on('render', syncMarkers);
 
@@ -251,6 +268,14 @@ export const MapView = forwardRef<MapViewHandle, Props>(function MapView(
     };
   }, []);
 
+  // Light/dark basemap.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || appliedTheme.current === theme) return;
+    appliedTheme.current = theme;
+    map.setStyle(STYLE_URL[theme], { diff: false });
+  }, [theme]);
+
   // Push new data into the clustered source.
   useEffect(() => {
     const map = mapRef.current;
@@ -258,14 +283,14 @@ export const MapView = forwardRef<MapViewHandle, Props>(function MapView(
     map.getSource<GeoJSONSource>(SOURCE_ID)?.setData(toGeoJSON(activeVenues));
   }, [activeVenues]);
 
-  // Dimmed (no matching events) venues: plain, unclustered markers.
+  // Venues without matching events: small hollow dots, unclustered.
   useEffect(() => {
     const map = mapRef.current;
     dimmedMarkersRef.current.forEach((m) => m.remove());
     dimmedMarkersRef.current = [];
     if (!map) return;
     dimmedMarkersRef.current = inactiveVenues.map((v) => {
-      const el = pinElement('pin pin--dimmed', DIMMED_COLOR, t.venuePinLabel(v.name, 0), '');
+      const el = pinElement('dot', t.venuePinLabel(v.name, 0), '');
       el.dataset.venueId = v.id;
       if (v.id === selectedRef.current) el.classList.add('is-selected');
       el.addEventListener('click', () => callbacks.current.onSelectVenue(v.id));

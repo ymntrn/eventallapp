@@ -45,6 +45,10 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    // MapLibre alone is ~1 MB minified; that is expected.
+    chunkSizeWarningLimit: 1400,
+  },
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],

@@ -8,6 +8,7 @@ export const tr = {
   locale: 'tr-TR',
   appName: 'Eventall',
   tagline: 'Ankara canlı etkinlik haritası',
+  mapLabel: 'Etkinlik haritası',
 
   loadingData: 'Etkinlikler yükleniyor…',
   loadingMap: 'Harita yükleniyor…',

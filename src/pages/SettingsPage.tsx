@@ -161,11 +161,32 @@ export function SettingsPage({ onEditPrefs }: { onEditPrefs(): void }) {
 
         <section className="group" aria-labelledby={`${id}-about`}>
           <h2 id={`${id}-about`} className="group__title">
-            {t.sectionAbout}
+            {t.sectionSources}
           </h2>
           <div className="row row--stack">
             <p>{t.aboutText}</p>
-            <p className="muted small">{t.mapAttributionNote}</p>
+          </div>
+          <div className="row row--stack">
+            <span>{t.sourceVenues}</span>
+            <p className="muted small">
+              {t.sourceVenuesText}{' '}
+              <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">
+                openstreetmap.org/copyright
+              </a>
+            </p>
+          </div>
+          <div className="row row--stack">
+            <span>{t.sourceTiles}</span>
+            <p className="muted small">
+              {t.sourceTilesText}{' '}
+              <a href="https://openfreemap.org" target="_blank" rel="noopener">
+                openfreemap.org
+              </a>
+            </p>
+          </div>
+          <div className="row row--stack">
+            <span>{t.sourceEvents}</span>
+            <p className="muted small">{t.sourceEventsText}</p>
             <p className="muted small">{t.version(__APP_VERSION__)}</p>
           </div>
         </section>

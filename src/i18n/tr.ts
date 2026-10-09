@@ -195,9 +195,16 @@ export const tr = {
   resetYes: 'Evet, sil',
   resetNo: 'Vazgeç',
   resetDone: 'Tüm veriler silindi.',
-  sectionAbout: 'Hakkında',
   aboutText: 'Eventall bir prototiptir. Bilet satmaz; seni resmi satış sitelerine yönlendirir.',
-  mapAttributionNote: 'Harita: OpenFreeMap, © OpenMapTiles, © OpenStreetMap katkıcıları',
+  sectionSources: 'Hakkında / Veri kaynakları',
+  sourceVenues: 'Mekan konumları',
+  sourceVenuesText: '© OpenStreetMap contributors. Veriler Open Database License (ODbL) ile kullanılır.',
+  sourceTiles: 'Harita altlığı',
+  sourceTilesText: 'OpenFreeMap, © OpenMapTiles, © OpenStreetMap contributors.',
+  sourceEvents: 'Etkinlikler',
+  sourceEventsText: 'Şu an örnek veridir; bilet sitelerinden canlı veri henüz alınmıyor.',
+  /** Kept in English: the wording OpenStreetMap asks for. */
+  osmCredit: '© OpenStreetMap contributors',
   version: (v: string) => `Sürüm ${v}`,
 
   // Near me

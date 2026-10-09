@@ -701,6 +701,32 @@ a {
   filter: invert(1);
 }
 
+/* "© OpenStreetMap contributors" stays visible on phones even when the compact
+   attribution is collapsed (see OsmCreditControl in MapView). */
+.osm-credit {
+  margin: 0 0 4px 6px !important;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  font-size: 0.65rem;
+  line-height: 1.5;
+}
+
+.osm-credit a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+@media (min-width: 641px) {
+  .osm-credit {
+    display: none;
+  }
+}
+
+.maplibregl-control-container:has(.maplibregl-compact-show) .osm-credit {
+  display: none;
+}
+
 @media (min-width: 768px) {
   .map-bottom {
     left: 16px;

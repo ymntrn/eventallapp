@@ -1,11 +1,13 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import {
+  AttributionControl,
   LngLatBounds,
   Map as MapLibreMap,
   Marker,
   NavigationControl,
   setWorkerUrl,
   type GeoJSONSource,
+  type IControl,
 } from 'maplibre-gl';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -28,6 +30,32 @@ const STYLE_URL: Record<Theme, string> = {
   light: 'https://tiles.openfreemap.org/styles/positron',
   dark: 'https://tiles.openfreemap.org/styles/dark',
 };
+
+const OSM_COPYRIGHT = 'https://www.openstreetmap.org/copyright';
+
+/**
+ * Always-visible "© OpenStreetMap contributors" for narrow screens, where the
+ * attribution control is compact and collapses to an (i) button. Hidden in CSS
+ * on wider screens and while the compact attribution is expanded.
+ */
+class OsmCreditControl implements IControl {
+  private el?: HTMLElement;
+  onAdd() {
+    const el = document.createElement('div');
+    el.className = 'maplibregl-ctrl osm-credit';
+    const a = document.createElement('a');
+    a.href = OSM_COPYRIGHT;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.textContent = t.osmCredit;
+    el.append(a);
+    this.el = el;
+    return el;
+  }
+  onRemove() {
+    this.el?.remove();
+  }
+}
 
 /** Paper-white (or app-dark) background so the map matches the UI. */
 const BACKGROUND: Record<Theme, string> = { light: '#ffffff', dark: '#0f1115' };
@@ -172,7 +200,7 @@ export const MapView = forwardRef<MapViewHandle, Props>(function MapView(
         zoom: DEFAULT_ZOOM,
         minZoom: 8,
         maxZoom: 19,
-        attributionControl: { compact: true },
+        attributionControl: false,
         dragRotate: false,
         pitchWithRotate: false,
       });
@@ -183,6 +211,15 @@ export const MapView = forwardRef<MapViewHandle, Props>(function MapView(
     }
     map.touchZoomRotate.disableRotation();
     map.addControl(new NavigationControl({ showCompass: false }), 'bottom-right');
+    // Full credits (OpenFreeMap, OpenMapTiles, OSM). `compact` is left unset so
+    // MapLibre makes it compact only on narrow maps (≤ 640 px).
+    map.addControl(
+      new AttributionControl({
+        customAttribution: `<a href="${OSM_COPYRIGHT}" target="_blank" rel="noopener">${t.osmCredit}</a>`,
+      }),
+      'bottom-right',
+    );
+    map.addControl(new OsmCreditControl(), 'bottom-left');
     mapRef.current = map;
     const markers = markersRef.current;
 

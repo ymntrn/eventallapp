@@ -1,0 +1,21 @@
+{
+  "_note": "TEMPORARY PLACEHOLDER DATA. Coordinates are rough estimates and MUST be verified before public release. Every venue has verified: false. Replace this file with the verified venue database (see README: 'Mekan veritabanını değiştirmek').",
+  "venues": [
+    { "id": "cso-ada-ankara", "name": "CSO Ada Ankara", "type": "classical", "address": "Talatpaşa Bulvarı, Altındağ", "lat": 39.936, "lng": 32.846, "verified": false },
+    { "id": "ankara-opera-sahnesi", "name": "Ankara Devlet Opera ve Balesi – Opera Sahnesi", "type": "opera", "address": "Opera Meydanı, Ulus, Altındağ", "lat": 39.9389, "lng": 32.8528, "verified": false },
+    { "id": "sinasi-sahnesi", "name": "Devlet Tiyatroları Şinasi Sahnesi", "type": "theater", "address": "Ulus, Altındağ", "lat": 39.9405, "lng": 32.8548, "verified": false },
+    { "id": "genclik-parki", "name": "Gençlik Parkı", "type": "open_air", "address": "Ulus, Altındağ", "lat": 39.9383, "lng": 32.8489, "verified": false },
+    { "id": "cermodern", "name": "CerModern", "type": "performance_space", "address": "Altınsoy Caddesi, Altındağ", "lat": 39.9369, "lng": 32.8443, "verified": false },
+    { "id": "ankara-arena", "name": "Ankara Arena", "type": "arena", "address": "Altındağ", "lat": 39.944, "lng": 32.8394, "verified": false },
+    { "id": "altinpark", "name": "Altınpark", "type": "festival_ground", "address": "Aydınlıkevler, Altındağ", "lat": 39.9655, "lng": 32.8817, "verified": false },
+    { "id": "akun-sahnesi", "name": "Devlet Tiyatroları Akün Sahnesi", "type": "theater", "address": "Atatürk Bulvarı, Çankaya", "lat": 39.9255, "lng": 32.8548, "verified": false },
+    { "id": "meb-sura-salonu", "name": "MEB Şura Salonu", "type": "concert_hall", "address": "Atatürk Bulvarı, Bakanlıklar, Çankaya", "lat": 39.916, "lng": 32.8535, "verified": false },
+    { "id": "cagdas-sanatlar-merkezi", "name": "Çankaya Belediyesi Çağdaş Sanatlar Merkezi", "type": "performance_space", "address": "Kurtuluş, Çankaya", "lat": 39.9245, "lng": 32.8655, "verified": false },
+    { "id": "if-performance-hall-ankara", "name": "IF Performance Hall Ankara", "type": "live_music", "address": "Kavaklıdere, Çankaya", "lat": 39.9105, "lng": 32.86, "verified": false },
+    { "id": "6-45-kk-ankara", "name": "6:45 KK Ankara", "type": "live_music", "address": "Kızılay, Çankaya", "lat": 39.9195, "lng": 32.856, "verified": false },
+    { "id": "congresium-ankara", "name": "ATO Congresium", "type": "concert_hall", "address": "Söğütözü, Çankaya", "lat": 39.91, "lng": 32.812, "verified": false },
+    { "id": "odtu-kultur-ve-kongre-merkezi", "name": "ODTÜ Kültür ve Kongre Merkezi", "type": "concert_hall", "address": "ODTÜ, Çankaya", "lat": 39.8915, "lng": 32.779, "verified": false },
+    { "id": "bilkent-konser-salonu", "name": "Bilkent Konser Salonu", "type": "classical", "address": "Bilkent Üniversitesi, Çankaya", "lat": 39.8706, "lng": 32.7524, "verified": false },
+    { "id": "bilkent-odeon", "name": "Bilkent ODEON", "type": "open_air", "address": "Bilkent Üniversitesi, Çankaya", "lat": 39.8693, "lng": 32.7487, "verified": false }
+  ]
+}

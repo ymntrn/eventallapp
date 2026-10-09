@@ -16,7 +16,8 @@
     "import:venues:db": "tsx scripts/import-venues-db.ts",
     "venues:review": "tsx scripts/venues-review.ts",
     "seed:events": "tsx scripts/generate-sample-events.ts",
-    "events:import": "tsx scripts/events/import.ts"
+    "events:import": "tsx scripts/events/import.ts",
+    "db:seed": "tsx scripts/supabase-seed.ts"
   },
   "dependencies": {
     "maplibre-gl": "^6.13.0",

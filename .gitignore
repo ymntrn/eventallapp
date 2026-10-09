@@ -9,3 +9,4 @@ dev-dist
 .vercel
 .netlify
 data/events/imported.json
+supabase/seed.sql

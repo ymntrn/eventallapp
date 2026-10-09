@@ -1,4 +1,4 @@
-name,type,lat,lng,address
-Gençlik Parkı,open_air,39.9383,32.8489,"Ulus, Altındağ"
-CSO Ada Ankara,classical,39.936,32.846,"Talatpaşa Bulvarı, Altındağ"
-"Örnek Sahne ""Çatı""",theater,"39,9200","32,8600",
+name,type,city,lat,lng,address
+Gençlik Parkı,open_air,Ankara,39.9383,32.8489,"Ulus, Altındağ"
+CSO Ada Ankara,classical,Ankara,39.936,32.846,"Talatpaşa Bulvarı, Altındağ"
+"Örnek Sahne ""Çatı""",theater,Ankara,"39,9200","32,8600",

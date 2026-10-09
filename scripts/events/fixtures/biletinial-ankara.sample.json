@@ -1,0 +1,13 @@
+{
+  "_note": "INVENTED FIXTURE for developing the importer. Not Biletinial data and not Biletinial's format: titles are made up, URLs are the platform homepage, and the field names are our own assumption. Venue names are real venues written the way a platform might write them, to exercise the matcher (including one unmatched and one Istanbul row that the Ankara run skips).",
+  "listings": [
+    { "id": "fx-1", "name": "[Örnek] Senfonik Akşam", "venue": "CSO Ada Ankara", "city": "Ankara", "date": "17.10.2026", "time": "20:00", "genre": "Klasik Müzik", "priceText": "300,00 TL", "url": "https://biletinial.com/" },
+    { "id": "fx-2", "name": "[Örnek] Senfonik Akşam", "venue": "CSO Ada", "city": "Ankara", "date": "17.10.2026", "time": "20:00", "genre": "Klasik Müzik", "priceText": "250,00 TL", "url": "https://biletinial.com/" },
+    { "id": "fx-3", "name": "[Örnek] Kiracı", "venue": "Akün Sahnesi", "city": "Ankara", "date": "18.10.2026", "time": "20:30", "genre": "Tiyatro", "priceText": "150 TL", "url": "https://biletinial.com/" },
+    { "id": "fx-4", "name": "[Örnek] Stand-up Gecesi", "venue": "ATO Congresium", "city": "Ankara", "date": "19.10.2026", "time": "21:00", "genre": "Stand Up", "priceText": "1.250,00 TL", "soldOut": true, "url": "https://biletinial.com/" },
+    { "id": "fx-5", "name": "[Örnek] Akustik Rock", "venue": "IF Performance Hall", "city": "Ankara", "date": "2026-10-20", "time": "21:30", "genre": "Konser", "priceText": "450 TL", "url": "https://biletinial.com/" },
+    { "id": "fx-6", "name": "[Örnek] Caz Gecesi", "venue": "Bilinmeyen Kulüp Ankara", "city": "Ankara", "date": "21.10.2026", "time": "22:00", "genre": "Caz", "priceText": "200 TL", "url": "https://biletinial.com/" },
+    { "id": "fx-7", "name": "[Örnek] Bale", "venue": "Ankara Opera Sahnesi", "city": "Ankara", "date": "31.02.2026", "time": "20:00", "genre": "Bale", "url": "https://biletinial.com/" },
+    { "id": "fx-8", "name": "[Örnek] Pop Konseri", "venue": "Zorlu PSM", "city": "İstanbul", "date": "22.10.2026", "time": "21:00", "genre": "Pop", "priceText": "900 TL", "url": "https://biletinial.com/" }
+  ]
+}

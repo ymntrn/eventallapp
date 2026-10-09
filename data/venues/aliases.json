@@ -1,0 +1,12 @@
+{
+  "_comment": "Venue id → other names ticketing platforms use for it. Matching ignores case, Turkish accents and punctuation, and is done within the venue's city. Add a name here when the importer reports it as unmatched.",
+  "ank-cso-ada-ankara": ["CSO Ada", "CSO Ada Ankara Ana Salon", "Cumhurbaşkanlığı Senfoni Orkestrası"],
+  "ank-congresium-ankara-ato": ["ATO Congresium", "Congresium"],
+  "ank-ankara-devlet-opera-ve-balesi-opera-sahnesi": ["Ankara Opera Sahnesi", "Opera Sahnesi Ankara"],
+  "ank-bilkent-konser-salonu-bso": ["Bilkent Konser Salonu"],
+  "ank-ahmet-adnan-saygun-merkezi": ["AASM"],
+  "ist-zorlu-psm": ["Zorlu Performans Sanatları Merkezi"],
+  "ist-maximum-uniq-hall-box-acikhava": ["Maximum Uniq Hall", "Maximum Uniq Box", "Maximum Uniq Açıkhava", "UNIQ İstanbul"],
+  "ist-cemal-resit-rey-konser-salonu": ["CRR Konser Salonu", "CRR"],
+  "ist-harbiye-cemil-topuzlu-acikhava-tiyatrosu": ["Harbiye Açıkhava", "Cemil Topuzlu Açıkhava Tiyatrosu"]
+}

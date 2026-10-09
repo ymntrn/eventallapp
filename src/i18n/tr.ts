@@ -110,7 +110,7 @@ export const tr = {
   priceUnknown: 'Fiyat sitede',
   compareNote:
     'Eventall bilet satmaz. Satın alma seçtiğin sitede tamamlanır; fiyat ve stok orada değişebilir.',
-  sampleOffersNote: 'Örnek veri: satıcılar ve fiyatlar gerçek değildir.',
+  sampleOffersNote: 'Örnek etkinlik: satıcılar ve fiyatlar gerçek değildir.',
   performersTitle: 'Sahnede',
   venueTitle: 'Mekan',
   showOnMap: 'Haritada göster',
@@ -182,7 +182,7 @@ export const tr = {
   languageSoon: 'English yakında',
   notificationsLabel: 'Favori etkinlik hatırlatmaları',
   notificationsHint: 'Prototipte bildirim gönderilmez.',
-  sampleBannerLabel: 'Örnek veri uyarısını göster',
+  sampleBannerLabel: 'Örnek etkinlik uyarısını göster',
   editPreferences: 'Etkinlik tercihlerini düzenle',
   sectionProfile: 'Profil',
   saveProfile: 'Kaydet',
@@ -225,7 +225,7 @@ export const tr = {
   searchPerformer: 'Sanatçı',
   clearSearch: 'Aramayı temizle',
 
-  sampleDataBanner: 'Örnek veri: etkinlikler, fiyatlar ve konumlar gerçek değildir.',
+  sampleDataBanner: 'Etkinlikler ve fiyatlar örnek veridir.',
   dismiss: 'Kapat',
 } as const;
 

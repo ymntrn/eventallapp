@@ -131,6 +131,11 @@ export function groupByVenue(events: EventWithVenue[]): VenueWithEvents[] {
   });
 }
 
+/** Sample events (scripts/generate-sample-events.ts, fixtures) are titled "[Örnek] …". */
+export function isSampleEvent(e: Pick<EventItem, 'title'>): boolean {
+  return e.title.startsWith('[Örnek]');
+}
+
 export function isAvailable(o: Offer): boolean {
   return o.available !== false;
 }

@@ -614,6 +614,17 @@ a {
   color: var(--muted);
 }
 
+.banner--small {
+  margin-top: 6px;
+  padding: 1px 2px 1px 10px;
+  font-size: 0.72rem;
+}
+
+.banner--small .icon-btn--small {
+  width: 28px;
+  height: 28px;
+}
+
 .map-bottom {
   position: absolute;
   left: 12px;

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AppData } from '../lib/data';
-import { filterEvents, groupByVenue } from '../lib/data';
+import { filterEvents, groupByVenue, isSampleEvent } from '../lib/data';
 import type { Theme } from '../lib/theme';
 import { actions, getState, useAppState } from '../lib/store';
 import { navigate, paths } from '../lib/router';
@@ -145,6 +145,7 @@ export function MapPage({ data, loadError, onRetry, now, theme, venueId, active,
         ? t.categories[prefs.categories[0]]
         : t.categoriesSelected(prefs.categories.length));
   const isEmpty = data !== null && filtered.length === 0;
+  const hasSampleEvents = useMemo(() => data?.events.some(isSampleEvent) ?? false, [data]);
 
   return (
     <div ref={rootRef} className={`map-page${selectedVenue ? ' has-sheet' : ''}`}>
@@ -202,8 +203,9 @@ export function MapPage({ data, loadError, onRetry, now, theme, venueId, active,
             {summary}
           </button>
         </div>
-        {state.settings.showSampleBanner && (
-          <div className="banner">
+        {/* Venues are real (OSM); only the events are still samples. Disappears with real events. */}
+        {state.settings.showSampleBanner && hasSampleEvents && (
+          <div className="banner banner--small">
             <span>{t.sampleDataBanner}</span>
             <button
               type="button"
@@ -211,7 +213,7 @@ export function MapPage({ data, loadError, onRetry, now, theme, venueId, active,
               onClick={() => actions.setSettings({ showSampleBanner: false })}
               aria-label={t.dismiss}
             >
-              <IconClose size={16} />
+              <IconClose size={14} />
             </button>
           </div>
         )}

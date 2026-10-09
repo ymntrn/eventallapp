@@ -1,5 +1,5 @@
 import { useId, useState, type FormEvent } from 'react';
-import type { DateFilter } from '../types';
+import { CITIES, type City, type DateFilter } from '../types';
 import { actions, useAppState, type ThemeSetting } from '../lib/store';
 import { paths } from '../lib/router';
 import { showToast } from '../lib/toast';
@@ -70,13 +70,16 @@ export function SettingsPage({ onEditPrefs }: { onEditPrefs(): void }) {
               ))}
             </select>
           </label>
-          <div className="row">
-            <span>
-              {t.cityLabel}
-              <span className="row__hint">{t.citySoon}</span>
-            </span>
-            <span className="muted">{t.cityValue}</span>
-          </div>
+          <label className="row">
+            <span>{t.cityLabel}</span>
+            <select className="select" value={state.prefs.city} onChange={(e) => actions.setCity(e.target.value as City)}>
+              {CITIES.map((c) => (
+                <option key={c} value={c}>
+                  {t.cities[c]}
+                </option>
+              ))}
+            </select>
+          </label>
           <div className="row">
             <span>
               {t.languageLabel}

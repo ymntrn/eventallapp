@@ -65,64 +65,67 @@ scripts/
 data/venues_source.example.csv
 ```
 
-## Replacing the venue database
+## Venue database
 
-The app reads venues only through `loadData()` in `src/lib/data.ts`, which imports `src/data/venues.json`. Swapping the database means replacing that one file, either by hand or from a CSV.
+The app reads venues only through `loadData()` in `src/lib/data.ts`, which imports `src/data/venues.json`. That file is **generated** from the OSM venue database in `data/venues/` (150 venues: 50 Ankara, 100 İstanbul, every coordinate from OpenStreetMap; see `data/venues/README.md`):
 
-### Option A: drop in a CSV (recommended)
-
-1. Create `data/venues_source.csv`. Start from `data/venues_source.example.csv` if you like. Use UTF-8 with a header row:
-
-   ```csv
-   name,type,lat,lng,address
-   Gençlik Parkı,open_air,39.9383,32.8489,"Ulus, Altındağ"
-   CSO Ada Ankara,classical,39.936,32.846,"Talatpaşa Bulvarı, Altındağ"
-   ```
-
-   - `name` (required). Must be unique.
-   - `type` (required). One of the values listed below.
-   - `lat`, `lng` (required). Decimal degrees (WGS84). Decimal commas such as `39,93` are accepted.
-   - `address` (optional). Quote it if it contains commas.
-2. Run `npm run import:venues`. This **overwrites** `src/data/venues.json`. Ids are generated from names (`Gençlik Parkı` → `genclik-parki`; duplicate names get `-2`, `-3`). Every venue starts with `verified: false`. Invalid rows are skipped and listed.
-3. Set `"verified": true` by hand on each venue whose coordinates you have checked. Re-importing resets this flag, so do it after the final import.
-4. Update `venueId`s in `src/data/events.json` if ids changed, then run `npm run validate:data`.
-
-### Option B: edit the JSON directly
-
-`src/data/venues.json`:
-
-```json
-{
-  "_note": "optional free text",
-  "venues": [
-    {
-      "id": "genclik-parki",
-      "name": "Gençlik Parkı",
-      "type": "open_air",
-      "address": "Ulus, Altındağ",
-      "lat": 39.9383,
-      "lng": 32.8489,
-      "verified": true
-    }
-  ]
-}
+```bash
+npm run import:venues:db   # data/venues/eventall_venues.json → src/data/venues.json
+npm run validate:data
 ```
+
+- Ids are kept from the database (`ank-…`, `ist-…`), so event `venueId`s stay stable.
+- Every venue starts with `verified: false`. Set `"verified": true` in `src/data/venues.json` once you have checked a pin (`npm run venues:review` lists them). Re-importing keeps `verified: true` for every venue whose coordinates did not change.
+- To fix or add a venue, edit `data/venues/venues_osm_source.tsv`, run `python3 data/venues/build_venues.py`, then `npm run import:venues:db`.
+
+### Venue type mapping
+
+The database has 14 venue types; the app has 13. Three app types (`stadium`, `congress_center`, `cultural_center`) were added because folding them into another type would lose real meaning (a stadium is not an arena, a belediye kültür merkezi is not a theatre). The mapping lives in `src/lib/venue-db.ts`.
+
+| Database type | App `VenueType` | Turkish label in the app |
+| --- | --- | --- |
+| `concert_hall` | `concert_hall` | Konser salonu |
+| `opera_house` | `opera` | Opera |
+| `theatre` | `theater` | Tiyatro |
+| `performance_hall` | `live_music` | Canlı müzik |
+| `live_music_bar` | `live_music` | Canlı müzik |
+| `nightclub` | `electronic` | Kulüp / elektronik |
+| `open_air` | `open_air` | Açık hava |
+| `arena` | `arena` | Arena |
+| `stadium` | `stadium` *(new)* | Stadyum |
+| `congress_center` | `congress_center` *(new)* | Kongre / fuar merkezi |
+| `expo_center` | `congress_center` | Kongre / fuar merkezi |
+| `cultural_center` | `cultural_center` *(new)* | Kültür merkezi |
+| `festival_area` | `festival_ground` | Festival alanı |
+| `arts_center` | `performance_space` | Sahne / sanat merkezi |
+
+`classical` is no longer produced by the import but stays valid for hand-curated venues.
+
+### `venues.json` fields
 
 | Field | Type | Notes |
 | --- | --- | --- |
-| `id` | string | Lowercase ASCII slug, unique. Turkish letters transliterated (ç→c, ğ→g, ı→i, ö→o, ş→s, ü→u) |
-| `name` | string | Unique |
-| `type` | enum | `concert_hall`, `live_music`, `electronic`, `open_air`, `festival_ground`, `theater`, `opera`, `classical`, `arena`, `performance_space` |
-| `address` | string? | Optional |
-| `lat`, `lng` | number | Must fall within the Ankara-province box (lat 39.5–40.3, lng 32.2–33.3) |
+| `id` | string | Lowercase ASCII slug, unique |
+| `name` | string | Unique within a city |
+| `type` | enum | `concert_hall`, `live_music`, `electronic`, `open_air`, `festival_ground`, `theater`, `opera`, `classical`, `arena`, `performance_space`, `stadium`, `congress_center`, `cultural_center` |
+| `city` | enum | `Ankara` or `İstanbul` |
+| `district` | string? | İlçe |
+| `address` | string? | Mahalle, ilçe |
+| `lat`, `lng` | number | Must fall inside the venue's city box (`CITY_BOUNDS` in `src/lib/geo.ts`) |
+| `precision` | enum? | `point`, `building_centroid` or `complex_centroid` (pin is the centre of a larger site) |
+| `osmId`, `osmUrl` | string? | The OpenStreetMap object the coordinate came from |
 | `verified` | boolean | `true` only once a human has checked the coordinates |
+
+### Manual CSV import (alternative)
+
+`npm run import:venues` builds `src/data/venues.json` from `data/venues_source.csv` instead (header `name,type,city,lat,lng,address`, app types). It **overwrites** the file and generates ids from names, so prefer the database import above.
 
 ### What validation checks
 
 `npm run validate:data` prints a report and never modifies files.
 
-- **Errors (fail the build):** unknown `venueId` or `performerId` on an event, duplicate venue/performer ids or venue names, non-slug ids, invalid `type`/`category`/`kind`/offer `platform`, events without offers, non-https offer `url`, negative prices, coordinates outside the Ankara box, malformed `startsAt`, duplicate event ids.
-- **Report / warnings (do not fail):** venues closer than 30 m to each other ("will be clustered"), number of `verified: false` venues, events already in the past.
+- **Errors (fail the build):** unknown `venueId` or `performerId` on an event, duplicate venue/performer ids, duplicate venue names within a city, non-slug ids, invalid `type`/`category`/`kind`/offer `platform`, unknown `city`, coordinates outside the venue's city box, invalid `precision`/`osmId`/`osmUrl`, events without offers, non-https offer `url`, negative prices, malformed `startsAt`, duplicate event ids.
+- **Report / warnings (do not fail):** venues per city and how many have events, venues closer than 30 m to each other ("will be clustered"), number of `verified: false` venues, `complex_centroid` venues, events already in the past.
 
 ## Adding events
 
@@ -134,7 +137,7 @@ Edit `src/data/events.json`:
   "events": [
     {
       "id": "cso-2026-10-17-beethoven",
-      "venueId": "cso-ada-ankara",
+      "venueId": "ank-cso-ada-ankara",
       "title": "Beethoven 9",
       "category": "jazz_classical",
       "startsAt": "2026-10-17T20:00:00+03:00",

@@ -1,5 +1,6 @@
 import type {
   Category,
+  City,
   DateFilter,
   EventItem,
   EventWithVenue,
@@ -69,6 +70,8 @@ export interface EventFilters {
   date: DateFilter;
   /** Empty = all categories. */
   categories: Category[];
+  /** Only events at venues in this city. Omit for every city. */
+  city?: City;
 }
 
 export function filterEvents(
@@ -79,7 +82,10 @@ export function filterEvents(
   const range = getDateRange(filters.date, now);
   const cats = new Set(filters.categories);
   return events.filter(
-    (e) => isInRange(e.startsAtMs, range) && (cats.size === 0 || cats.has(e.category)),
+    (e) =>
+      isInRange(e.startsAtMs, range) &&
+      (cats.size === 0 || cats.has(e.category)) &&
+      (filters.city === undefined || e.venue.city === filters.city),
   );
 }
 

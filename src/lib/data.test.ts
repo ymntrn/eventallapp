@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { EventItem, Offer, Performer, Venue } from '../types';
 import { dominantCategory, filterEvents, groupByVenue, joinEventsToVenues, minPrice, sortOffers } from './data';
 
-const venue = (id: string): Venue => ({ id, name: id, type: 'theater', lat: 39.93, lng: 32.85, verified: false });
+const venue = (id: string, city: Venue['city'] = 'Ankara'): Venue => ({ id, name: id, type: 'theater', city, lat: 39.93, lng: 32.85, verified: false });
 const event = (id: string, venueId: string, startsAt: string, category: EventItem['category'] = 'rock'): EventItem => ({
   id,
   venueId,
@@ -57,6 +57,15 @@ describe('filterEvents + groupByVenue', () => {
       'tonight-rock',
       'sat-pop',
     ]);
+  });
+
+  it('filters by city when one is given', () => {
+    const mixed = joinEventsToVenues(
+      [event('ank', 'a', '2026-10-10T20:00:00+03:00'), event('ist', 'i', '2026-10-10T21:00:00+03:00')],
+      [...venues, venue('i', 'İstanbul')],
+    );
+    expect(filterEvents(mixed, { date: 'all', categories: [], city: 'İstanbul' }, now).map((e) => e.id)).toEqual(['ist']);
+    expect(filterEvents(mixed, { date: 'all', categories: [] }, now).map((e) => e.id)).toEqual(['ank', 'ist']);
   });
 
   it('groups only venues with matching events', () => {

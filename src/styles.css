@@ -568,8 +568,27 @@ a {
   line-height: 16px;
 }
 
-.summary-chip {
+/* Summary chip and city switcher share one row under the search bar. */
+.map-top__chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
   margin-top: 8px;
+}
+
+.city-seg {
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.city-seg .seg__opt {
+  min-height: 28px;
+  padding: 0 12px;
+  font-size: 0.85rem;
+}
+
+.summary-chip {
   min-height: 34px;
   padding: 0 14px;
   border: 0;

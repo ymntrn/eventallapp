@@ -1,22 +1,41 @@
-/** Default map view. */
-export const ANKARA_CENTER: [number, number] = [32.85, 39.93]; // [lng, lat]
+import type { City } from '../types';
+
 export const DEFAULT_ZOOM = 12;
 
-/** Rough Ankara-province bounding box, used for data validation and "Yakınımda". */
-export const ANKARA_BOUNDS = {
-  minLat: 39.5,
-  maxLat: 40.3,
-  minLng: 32.2,
-  maxLng: 33.3,
-} as const;
+export interface Bounds {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+}
 
-export function isInAnkara(lat: number, lng: number): boolean {
-  return (
-    lat >= ANKARA_BOUNDS.minLat &&
-    lat <= ANKARA_BOUNDS.maxLat &&
-    lng >= ANKARA_BOUNDS.minLng &&
-    lng <= ANKARA_BOUNDS.maxLng
-  );
+/**
+ * Rough province bounding boxes, used for data validation and "Yakınımda".
+ * Same boxes as data/venues/build_venues.py.
+ */
+export const CITY_BOUNDS: Record<City, Bounds> = {
+  Ankara: { minLat: 39.3, maxLat: 40.5, minLng: 31.8, maxLng: 33.6 },
+  İstanbul: { minLat: 40.8, maxLat: 41.6, minLng: 28.0, maxLng: 29.9 },
+};
+
+/** Default map view per city, [lng, lat]. */
+export const CITY_CENTER: Record<City, [number, number]> = {
+  Ankara: [32.85, 39.93],
+  İstanbul: [28.98, 41.04],
+};
+
+export function isInBounds(lat: number, lng: number, b: Bounds): boolean {
+  return lat >= b.minLat && lat <= b.maxLat && lng >= b.minLng && lng <= b.maxLng;
+}
+
+export function isInCity(lat: number, lng: number, city: City): boolean {
+  return isInBounds(lat, lng, CITY_BOUNDS[city]);
+}
+
+/** The supported city whose box contains the point, or null. */
+export function cityAt(lat: number, lng: number): City | null {
+  for (const city of Object.keys(CITY_BOUNDS) as City[]) if (isInCity(lat, lng, city)) return city;
+  return null;
 }
 
 /** Great-circle distance in meters. */

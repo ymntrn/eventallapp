@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { AppData } from '../lib/data';
 import { filterEvents, groupByVenue } from '../lib/data';
 import type { Theme } from '../lib/theme';
-import { actions, useAppState } from '../lib/store';
+import { actions, getState, useAppState } from '../lib/store';
 import { navigate, paths } from '../lib/router';
-import { isInAnkara } from '../lib/geo';
+import { cityAt } from '../lib/geo';
+import { CITIES } from '../types';
 import { showToast } from '../lib/toast';
 import { t } from '../i18n/tr';
 import { MapView, type MapViewHandle } from '../components/MapView';
@@ -28,6 +29,7 @@ interface Props {
 export function MapPage({ data, loadError, onRetry, now, theme, venueId, active, onOpenFilters }: Props) {
   const state = useAppState();
   const { prefs } = state;
+  const { city } = prefs;
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState(false);
   const [locating, setLocating] = useState(false);
@@ -44,25 +46,53 @@ export function MapPage({ data, loadError, onRetry, now, theme, venueId, active,
     [data, now],
   );
   const filtered = useMemo(
-    () => (data ? filterEvents(data.events, { date: prefs.date, categories: prefs.categories }, now) : []),
-    [data, prefs.date, prefs.categories, now],
+    () => (data ? filterEvents(data.events, { date: prefs.date, categories: prefs.categories, city }, now) : []),
+    [data, prefs.date, prefs.categories, city, now],
   );
   const activeVenues = useMemo(() => groupByVenue(filtered), [filtered]);
   const inactiveVenues = useMemo(() => {
     if (!data) return [];
     const active = new Set(activeVenues.map((v) => v.venue.id));
     // The open venue always keeps a marker, even if the filters hide its events.
-    return data.venues.filter((v) => !active.has(v.id) && (prefs.showAllVenues || v.id === venueId));
-  }, [data, prefs.showAllVenues, activeVenues, venueId]);
+    return data.venues.filter(
+      (v) => !active.has(v.id) && ((prefs.showAllVenues && v.city === city) || v.id === venueId),
+    );
+  }, [data, prefs.showAllVenues, city, activeVenues, venueId]);
 
   const selectedVenue = (venueId && data?.venues.find((v) => v.id === venueId)) || null;
   const selectedEvents = useMemo(() => filtered.filter((e) => e.venueId === venueId), [filtered, venueId]);
+
+  // A venue in the other city (search, event page, URL) switches the city.
+  // Its own flyTo below wins over the city fit.
+  // Runs once per opened venue, so closing the sheet and switching city in the
+  // same click cannot bounce back to the old city.
+  const lastCity = useRef(city);
+  const handledVenue = useRef<string | null>(null);
+  useEffect(() => {
+    if (!selectedVenue || handledVenue.current === selectedVenue.id) return;
+    handledVenue.current = selectedVenue.id;
+    if (selectedVenue.city === getState().prefs.city) return;
+    lastCity.current = selectedVenue.city;
+    actions.setCity(selectedVenue.city);
+  }, [selectedVenue]);
+  useEffect(() => {
+    if (!venueId) handledVenue.current = null;
+  }, [venueId]);
 
   // Fly to a venue opened by URL (e.g. "Haritada göster" on an event page).
   useEffect(() => {
     if (!mapReady || !selectedVenue) return;
     mapRef.current?.flyTo(selectedVenue.lat, selectedVenue.lng, { forPanel: true });
   }, [mapReady, selectedVenue]);
+
+  // City switched: fit the map to that city's venues with matching events,
+  // or to all its venues when nothing matches.
+  useEffect(() => {
+    if (!mapReady || !data || lastCity.current === city) return;
+    lastCity.current = city;
+    const withEvents = activeVenues.map((v) => v.venue);
+    mapRef.current?.fitTo(withEvents.length > 0 ? withEvents : data.venues.filter((v) => v.city === city));
+  }, [city, mapReady, data, activeVenues]);
 
   // When the filters change, bring every matching venue into view.
   const filterKey = `${prefs.date}|${prefs.categories.join(',')}`;
@@ -87,7 +117,13 @@ export function MapPage({ data, loadError, onRetry, now, theme, venueId, active,
       (pos) => {
         setLocating(false);
         const { latitude, longitude } = pos.coords;
-        if (!isInAnkara(latitude, longitude)) return showToast(t.geoOutside);
+        const here = cityAt(latitude, longitude);
+        if (!here) return showToast(t.geoOutside);
+        if (here !== city) {
+          // Skip the city fit; we fly to the user instead.
+          lastCity.current = here;
+          actions.setCity(here);
+        }
         mapRef.current?.setUserLocation(latitude, longitude);
         mapRef.current?.flyTo(latitude, longitude, { zoom: 14 });
       },
@@ -116,6 +152,7 @@ export function MapPage({ data, loadError, onRetry, now, theme, venueId, active,
         <MapView
           ref={mapRef}
           theme={theme}
+          initialCity={city}
           activeVenues={activeVenues}
           inactiveVenues={inactiveVenues}
           selectedVenueId={venueId ?? null}
@@ -143,9 +180,28 @@ export function MapPage({ data, loadError, onRetry, now, theme, venueId, active,
             {activeFilterCount > 0 && <span className="filter-btn__badge">{activeFilterCount}</span>}
           </button>
         </div>
-        <button type="button" className="summary-chip" onClick={onOpenFilters}>
-          {summary}
-        </button>
+        <div className="map-top__chips">
+          <div className="seg city-seg" role="radiogroup" aria-label={t.cityPickerLabel}>
+            {CITIES.map((c) => (
+              <button
+                key={c}
+                type="button"
+                role="radio"
+                aria-checked={city === c}
+                className="seg__opt"
+                onClick={() => {
+                  if (venueId) closeSheet();
+                  actions.setCity(c);
+                }}
+              >
+                {t.cities[c]}
+              </button>
+            ))}
+          </div>
+          <button type="button" className="summary-chip" onClick={onOpenFilters}>
+            {summary}
+          </button>
+        </div>
         {state.settings.showSampleBanner && (
           <div className="banner">
             <span>{t.sampleDataBanner}</span>

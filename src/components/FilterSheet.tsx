@@ -122,7 +122,7 @@ export function FilterSheet({ initial, countFor, onboarding, onApply, onClose }:
           <button
             type="button"
             className="btn btn--ghost"
-            onClick={() => setDraft({ date: 'all', categories: [], showAllVenues: false })}
+            onClick={() => setDraft({ ...draft, date: 'all', categories: [], showAllVenues: false })}
           >
             {t.clearFilters}
           </button>

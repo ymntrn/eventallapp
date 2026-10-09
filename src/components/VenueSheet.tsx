@@ -43,7 +43,11 @@ export function VenueSheet({ venue, events, onClose, onShowAllDates }: Props) {
             {t.venueTypes[venue.type]}
             {venue.address ? `, ${venue.address}` : ''}
           </p>
-          {!venue.verified && <p className="sheet__unverified">{t.unverifiedLocation}</p>}
+          {!venue.verified && (
+            <p className="sheet__unverified">
+              {venue.precision === 'complex_centroid' ? t.approxLocation : t.unverifiedLocation}
+            </p>
+          )}
         </div>
         <button type="button" className="icon-btn" onClick={onClose} aria-label={t.close}>
           <IconClose />

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { CATEGORIES, type Category, type DateFilter } from '../types';
+import { CATEGORIES, CITIES, type Category, type City, type DateFilter } from '../types';
 
 /**
  * Client-only app state, persisted to localStorage. There is NO backend yet:
@@ -28,6 +28,8 @@ export interface Preferences {
   categories: Category[];
   /** Also show venues with no matching events, as small hollow dots. */
   showAllVenues: boolean;
+  /** City shown on the map. */
+  city: City;
 }
 
 export interface AppState {
@@ -49,7 +51,7 @@ export const DEFAULT_STATE: AppState = {
   favoriteEvents: [],
   favoritePerformers: [],
   attended: [],
-  prefs: { date: 'next7', categories: [], showAllVenues: false },
+  prefs: { date: 'next7', categories: [], showAllVenues: false, city: 'Ankara' },
   settings: { theme: 'system', notifications: true, showSampleBanner: true },
   onboarded: false,
 };
@@ -78,6 +80,7 @@ export function parseState(raw: string | null): AppState {
           (CATEGORIES as readonly string[]).includes(c),
         ),
         showAllVenues: p.prefs?.showAllVenues === true,
+        city: CITIES.find((c) => c === p.prefs?.city) ?? DEFAULT_STATE.prefs.city,
       },
       settings: {
         theme,
@@ -152,6 +155,10 @@ export const actions = {
   },
   setDate(date: DateFilter) {
     set({ ...state, prefs: { ...state.prefs, date } });
+  },
+  setCity(city: City) {
+    if (state.prefs.city === city) return;
+    set({ ...state, prefs: { ...state.prefs, city } });
   },
   markOnboarded() {
     set({ ...state, onboarded: true });

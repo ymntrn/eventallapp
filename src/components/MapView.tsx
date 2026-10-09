@@ -10,9 +10,9 @@ import {
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import type { Feature, FeatureCollection, Point } from 'geojson';
-import type { Venue, VenueWithEvents } from '../types';
+import type { City, Venue, VenueWithEvents } from '../types';
 import type { Theme } from '../lib/theme';
-import { ANKARA_CENTER, DEFAULT_ZOOM } from '../lib/geo';
+import { CITY_CENTER, DEFAULT_ZOOM } from '../lib/geo';
 import { t } from '../i18n/tr';
 
 // MapLibre 6 runs its worker from a separate file; let Vite serve it.
@@ -41,6 +41,8 @@ export interface MapViewHandle {
 
 interface Props {
   theme: Theme;
+  /** City to show first; later changes go through fitTo(). */
+  initialCity: City;
   activeVenues: VenueWithEvents[];
   /** Venues without matching events; drawn as small hollow dots. */
   inactiveVenues: Venue[];
@@ -105,7 +107,7 @@ function panelOffset(container: HTMLElement): [number, number] {
 }
 
 export const MapView = forwardRef<MapViewHandle, Props>(function MapView(
-  { theme, activeVenues, inactiveVenues, selectedVenueId, onSelectVenue, onReady, onError },
+  { theme, initialCity, activeVenues, inactiveVenues, selectedVenueId, onSelectVenue, onReady, onError },
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -166,7 +168,7 @@ export const MapView = forwardRef<MapViewHandle, Props>(function MapView(
       map = new MapLibreMap({
         container: containerRef.current,
         style: STYLE_URL[appliedTheme.current],
-        center: ANKARA_CENTER,
+        center: CITY_CENTER[initialCity],
         zoom: DEFAULT_ZOOM,
         minZoom: 8,
         maxZoom: 19,

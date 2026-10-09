@@ -13,9 +13,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Eventall – Ankara etkinlik haritası',
+        name: 'Eventall – Ankara ve İstanbul etkinlik haritası',
         short_name: 'Eventall',
-        description: "Ankara'daki konser, tiyatro ve festivalleri haritada keşfedin.",
+        description: "Ankara ve İstanbul'daki konser, tiyatro ve festivalleri haritada keşfedin.",
         lang: 'tr',
         start_url: '/',
         scope: '/',

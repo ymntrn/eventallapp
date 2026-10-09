@@ -17,6 +17,8 @@ from `eventall_venues.json` by `npm run import:venues:db` (see "Using it in the 
 | `venues_osm_source.tsv` | The looked-up OSM rows the files are built from |
 | `build_venues.py` | Rebuilds all four files from the TSV and runs the checks: `python3 build_venues.py` |
 
+Venues we could not place yet are listed in [`MISSING.md`](MISSING.md).
+
 ## Columns
 
 | Column | Meaning |

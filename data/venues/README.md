@@ -34,9 +34,9 @@ Venues we could not place yet are listed in [`MISSING.md`](MISSING.md).
 | `osm_id`, `osm_url`, `osm_name` | The OSM object the coordinate came from |
 | `source`, `verified_on` | Provenance |
 
-The 8 `complex_centroid` venues are worth placing by hand if a pin needs to sit on the
-exact hall: Zorlu PSM, Maximum Uniq, Trump Sahne, Beykoz Kundura, CSO Ada Ankara,
-Ankapark, Mogan Parkı, Gençlik Parkı. See "Approximate pins" below.
+The 7 `complex_centroid` venues are worth placing by hand if a pin needs to sit on the
+exact hall: Zorlu PSM, Maximum Uniq, Trump Sahne, Beykoz Kundura, Ankapark, Mogan Parkı,
+Gençlik Parkı. OpenStreetMap has nothing more specific for them (checked 2026-10-10). See "Approximate pins" below.
 
 ## Checks run by `build_venues.py`
 
@@ -45,8 +45,8 @@ Ankapark, Mogan Parkı, Gençlik Parkı. See "Approximate pins" below.
 - Every point inside its city's bounding box
 - Pairs closer than 30 m are reported (currently only Kadıköy Sahne / Bade76, 16 m, same street)
 
-A sample of 24 random venues was reverse-geocoded: 21 resolved to the venue itself and
-3 to the same building or site.
+On 2026-10-10 all 150 pins were checked against live OpenStreetMap data: every object
+exists, every name matches and every pin is on its object. See `PIN_CHECK.md`.
 
 ## Using it in the app
 
@@ -75,11 +75,12 @@ on the venue, `--verify` its id. If it does not, fix the TSV row, rebuild and re
 
 ## Approximate pins (complex_centroid)
 
-Status 2026-10-09: **not refined.** Nominatim, Overpass and openstreetmap.org were not
-reachable from the environment that did this work, so no lookups were made and no
-coordinate was changed. Coordinates are never estimated by hand.
+Status 2026-10-10: **checked.** OSM was searched around each of the 8 original approximate
+pins. CSO Ada Ankara was moved to its concert hall building (`way/880861580`). For the other
+7, OSM has no separate hall, stage or event-area object, so they stay as they are.
+Coordinates are never estimated by hand.
 
-To refine one, find the hall/stage/entrance as its own OSM object near the current point,
+To refine one later (for example after someone maps the hall in OSM), find the hall/stage/entrance as its own OSM object near the current point,
 for example on https://overpass-turbo.eu:
 
 ```

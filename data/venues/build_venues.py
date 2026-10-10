@@ -20,7 +20,6 @@ COMPLEX = {
     "Ankapark": "Point is the centroid of the park area",
     "Mogan Parkı": "Point is the centroid of the park area",
     "Gençlik Parkı": "Point is the centroid of the park area",
-    "CSO Ada Ankara": "Point is the CSO Ada campus centroid (main hall is on the campus)",
 }
 CITY_BBOX = {"Ankara": (39.3, 31.8, 40.5, 33.6), "İstanbul": (40.8, 28.0, 41.6, 29.9)}
 

@@ -12,7 +12,7 @@ events are curated by hand from public event pages until a platform gives us a f
 
 | Item | Done when |
 | --- | --- |
-| Venue pins | Every Ankara venue that has an event this week is `verified: true` (`npm run venues:review -- --city Ankara`), including CSO Ada Ankara, Gençlik Parkı, Ankapark and Mogan Parkı if they host events |
+| Venue pins | Every Ankara venue that has an event this week is `verified: true` (`npm run venues:review -- --city Ankara`), including Gençlik Parkı, Ankapark and Mogan Parkı if they host events (their pins are park centres) |
 | Missing venues | Pins sent for Ankara Arena, Küçük Tiyatro, İrfan Şahinbaş Atölye Sahnesi and Saklıkent if any of them hosts an event this week (`data/venues/MISSING.md`) |
 | Events | At least 40 real Ankara events for the next 7 days, across at least 4 categories and 15 venues, in `src/data/events.json` (or Supabase). No `[Örnek]` titles left. The sample notice then disappears on its own |
 | Offers | Each event links to the seller's **own event page** (not the homepage), with the price shown there and the date checked. Events sold by several sellers have one offer per seller |

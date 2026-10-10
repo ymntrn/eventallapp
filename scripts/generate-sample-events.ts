@@ -50,7 +50,7 @@ const TEMPLATES: Template[] = [
   [5, '23:00', 'ank-cermodern', 'Elektronik Müzik Gecesi', 'electronic', 'Bubilet', 700, ['frekans-kolektif', 'dj-gece-yarisi']],
   [6, '15:00', 'ank-genclik-parki', 'Açık Hava Halk Müziği Konseri', 'other', 'Mobilet'],
   [6, '20:00', 'ank-dogan-tasdelen-cagdas-sanatlar-merkezi', 'Tek Kişilik Oyun: Ses', 'theater', 'Biletinial', 100],
-  [7, '21:00', 'ank-ankara-spor-salonu', 'Pop Konseri', 'pop', 'Passo', 900, ['selin-ayaz']],
+  [7, '21:00', 'ank-ankara-arena', 'Pop Konseri', 'pop', 'Passo', 900, ['selin-ayaz']],
   [8, '20:00', 'ank-meb-sura-salonu', 'Türk Sanat Müziği Konseri', 'other', 'Biletix', 300],
   [9, '20:30', 'ank-ankara-sanat-tiyatrosu-ast', 'Müzikal: Ankara Rüyası', 'theater', 'Biletinial', 200, ['sahne-atolyesi']],
   [10, '21:00', 'ank-nefes-bar', 'Punk Rock Gecesi', 'rock', 'Biletix', 350, ['gri-sokak']],

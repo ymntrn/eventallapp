@@ -8,11 +8,11 @@
       "city": "Ankara",
       "district": "Altındağ",
       "address": "Hacı Bayram Mahallesi, Altındağ",
-      "lat": 39.9329551,
-      "lng": 32.8505724,
-      "precision": "complex_centroid",
-      "osmId": "way/879793992",
-      "osmUrl": "https://www.openstreetmap.org/way/879793992",
+      "lat": 39.9334047,
+      "lng": 32.8504597,
+      "precision": "building_centroid",
+      "osmId": "way/880861580",
+      "osmUrl": "https://www.openstreetmap.org/way/880861580",
       "verified": false
     },
     {
@@ -520,8 +520,8 @@
       "verified": false
     },
     {
-      "id": "ank-ankara-spor-salonu",
-      "name": "Ankara Spor Salonu",
+      "id": "ank-ankara-arena",
+      "name": "Ankara Arena",
       "type": "arena",
       "city": "Ankara",
       "district": "Altındağ",

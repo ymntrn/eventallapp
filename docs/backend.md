@@ -1,8 +1,27 @@
 # Backend (Supabase): setup
 
 The app runs without a backend: by default it reads the bundled JSON in `src/data/`.
-Everything below is optional and nothing has been provisioned yet. It sets up a Supabase
-(Postgres + PostGIS) project that serves the same data, read-only, to the public.
+With the two `VITE_SUPABASE_*` variables set, it reads the same data from Supabase
+(Postgres + PostGIS), read-only, instead.
+
+## Status (2026-10-10)
+
+Provisioned: Supabase project **eventall** (ref `zlubkusxrdvutvuukhgj`, region eu-west-1),
+`https://zlubkusxrdvutvuukhgj.supabase.co`.
+
+- Migration `20261009120000_init_schema.sql` applied in the SQL editor.
+- Seeded from commit `65285fc`: 150 venues (50 Ankara, 100 İstanbul), 15 performers,
+  44 sample events, 42 event–performer links, 110 offers. The seed SQL was byte-identical
+  to `npm run db:seed` output.
+- Checked with the anon key: `venues_with_coords`, `events` read fine; an anon insert into
+  `venues` is refused by row-level security (`42501`).
+- The anon key is in the dashboard under Project Settings → API Keys. Put it in
+  `.env.local` (gitignored) and in the hosting provider's build env; never commit it with the
+  service_role key.
+- Re-seed after data changes: `npm run db:seed`, then paste `supabase/seed.sql` into the SQL
+  editor (or `psql "$SUPABASE_DB_URL" -f supabase/seed.sql`).
+
+Everything below describes how it was set up and how to repeat it.
 
 ## What is in the repo
 
@@ -13,9 +32,8 @@ Everything below is optional and nothing has been provisioned yet. It sets up a 
 | `src/lib/supabase-data.ts` | Read path used by `loadData()` when the env vars are set: Supabase REST API (PostgREST) with the anon key, paged, mapped to the same `AppData` shape |
 | `src/lib/user-backend.ts` | `UserBackend` interface for accounts and user data. Today `localUserBackend` (localStorage demo) |
 
-The migration and seed were tested on Postgres 16 + PostGIS 3 with PostgREST in front:
-the app built with the env vars loaded venues, events, offers and performers from the database.
-They have not been run on a real Supabase project.
+The migration and seed were first tested on Postgres 16 + PostGIS 3 with PostgREST in front,
+then applied to the real Supabase project (see Status).
 
 ## What you need to create
 

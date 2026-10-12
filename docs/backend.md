@@ -10,8 +10,10 @@ Provisioned: Supabase project **eventall** (ref `zlubkusxrdvutvuukhgj`, region e
 `https://zlubkusxrdvutvuukhgj.supabase.co`.
 
 - Migration `20261009120000_init_schema.sql` applied in the SQL editor.
-- Seeded from commit `65285fc`: 150 venues (50 Ankara, 100 İstanbul), 15 performers,
-  44 sample events, 42 event–performer links, 110 offers. The seed SQL was byte-identical
+- Re-seeded 2026-10-12 from commit `f1b63ac` (`npm run db:seed -- --prune`): 154 venues (51 Ankara,
+  103 İstanbul; the 5 owner pins are verified), 15 performers, 44 sample events, 42
+  event–performer links, 110 offers. The stale row `ank-devlet-tiyatrolari-atolye-sahnesi`
+  (renamed to İrfan Şahinbaş Atölye Sahnesi) was deleted. The seed SQL was byte-identical
   to `npm run db:seed` output.
 - Checked with the anon key: `venues_with_coords`, `events` read fine; an anon insert into
   `venues` is refused by row-level security (`42501`).

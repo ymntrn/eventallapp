@@ -1,5 +1,6 @@
 import type {
   Category,
+  City,
   DateFilter,
   EventItem,
   EventWithVenue,
@@ -12,6 +13,7 @@ import type {
   VenuesFile,
 } from '../types';
 import { getDateRange, isInRange } from './dates';
+import { loadFromSupabase, supabaseConfig } from './supabase-data';
 
 export interface AppData {
   venues: Venue[];
@@ -20,23 +22,32 @@ export interface AppData {
 }
 
 /**
- * Single entry point for data. Today it reads the bundled JSON files; to switch
- * to an API later, replace the two imports with fetch() calls returning the
- * same VenuesFile / EventsFile shapes.
+ * Single entry point for data. Reads the bundled JSON files, or Supabase when
+ * VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set at build time
+ * (docs/backend.md). Same AppData shape either way.
  */
 export async function loadData(): Promise<AppData> {
+  const cfg = supabaseConfig(import.meta.env);
+  const { venues: venuesFile, events: eventsFile, performers: performersFile } = cfg
+    ? await loadFromSupabase(cfg, Date.now())
+    : await loadBundled();
+  return {
+    venues: venuesFile.venues,
+    performers: performersFile.performers,
+    events: joinEventsToVenues(eventsFile.events, venuesFile.venues, performersFile.performers),
+  };
+}
+
+async function loadBundled() {
   const [venuesModule, eventsModule, performersModule] = await Promise.all([
     import('../data/venues.json'),
     import('../data/events.json'),
     import('../data/performers.json'),
   ]);
-  const venuesFile = venuesModule.default as VenuesFile;
-  const eventsFile = eventsModule.default as EventsFile;
-  const performersFile = performersModule.default as PerformersFile;
   return {
-    venues: venuesFile.venues,
-    performers: performersFile.performers,
-    events: joinEventsToVenues(eventsFile.events, venuesFile.venues, performersFile.performers),
+    venues: venuesModule.default as VenuesFile,
+    events: eventsModule.default as EventsFile,
+    performers: performersModule.default as PerformersFile,
   };
 }
 
@@ -69,6 +80,8 @@ export interface EventFilters {
   date: DateFilter;
   /** Empty = all categories. */
   categories: Category[];
+  /** Only events at venues in this city. Omit for every city. */
+  city?: City;
 }
 
 export function filterEvents(
@@ -79,7 +92,10 @@ export function filterEvents(
   const range = getDateRange(filters.date, now);
   const cats = new Set(filters.categories);
   return events.filter(
-    (e) => isInRange(e.startsAtMs, range) && (cats.size === 0 || cats.has(e.category)),
+    (e) =>
+      isInRange(e.startsAtMs, range) &&
+      (cats.size === 0 || cats.has(e.category)) &&
+      (filters.city === undefined || e.venue.city === filters.city),
   );
 }
 
@@ -113,6 +129,11 @@ export function groupByVenue(events: EventWithVenue[]): VenueWithEvents[] {
     const sorted = [...list].sort((a, b) => a.startsAtMs - b.startsAtMs);
     return { venue: sorted[0].venue, events: sorted, dominantCategory: dominantCategory(sorted) };
   });
+}
+
+/** Sample events (scripts/generate-sample-events.ts, fixtures) are titled "[Örnek] …". */
+export function isSampleEvent(e: Pick<EventItem, 'title'>): boolean {
+  return e.title.startsWith('[Örnek]');
 }
 
 export function isAvailable(o: Offer): boolean {

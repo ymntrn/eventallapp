@@ -9,8 +9,18 @@ export const VENUE_TYPES = [
   'classical',
   'arena',
   'performance_space',
+  'stadium',
+  'congress_center',
+  'cultural_center',
 ] as const;
 export type VenueType = (typeof VENUE_TYPES)[number];
+
+export const CITIES = ['Ankara', 'İstanbul'] as const;
+export type City = (typeof CITIES)[number];
+
+/** How exactly the coordinate sits on the venue (from the OSM venue database). */
+export const VENUE_PRECISIONS = ['point', 'building_centroid', 'complex_centroid'] as const;
+export type VenuePrecision = (typeof VENUE_PRECISIONS)[number];
 
 export const CATEGORIES = [
   'rock',
@@ -38,9 +48,17 @@ export interface Venue {
   id: string;
   name: string;
   type: VenueType;
+  city: City;
+  /** İlçe, e.g. "Çankaya". */
+  district?: string;
   address?: string;
   lat: number;
   lng: number;
+  /** OpenStreetMap object the coordinate came from, e.g. "way/879793992". */
+  osmId?: string;
+  /** https://www.openstreetmap.org/… link to that object. */
+  osmUrl?: string;
+  precision?: VenuePrecision;
   /** True only if the coordinates were checked by a human. */
   verified: boolean;
 }

@@ -3,14 +3,17 @@
  *
  *   npm run import:venues
  *
- * CSV header (first row): name,type,lat,lng,address   (address optional)
+ * Manual alternative to `npm run import:venues:db` (the OSM venue database).
+ *
+ * CSV header (first row): name,type,city,lat,lng,address   (address optional)
+ * city is Ankara or İstanbul.
  * Ids are generated from names (Turkish characters transliterated). Every
  * imported venue gets verified: false — flip it to true per venue after checking.
  * Overwrites src/data/venues.json. Run `npm run validate:data` afterwards.
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { VENUE_TYPES, type Venue, type VenueType, type VenuesFile } from '../src/types.ts';
+import { CITIES, VENUE_TYPES, type City, type Venue, type VenueType, type VenuesFile } from '../src/types.ts';
 import { uniqueSlug } from '../src/lib/slug.ts';
 
 const root = resolve(import.meta.dirname, '..');
@@ -53,14 +56,14 @@ function parseCsv(text: string): string[][] {
 
 if (!existsSync(csvPath)) {
   console.log(`No CSV found at data/venues_source.csv – nothing to import.`);
-  console.log(`Expected header: name,type,lat,lng,address`);
+  console.log(`Expected header: name,type,city,lat,lng,address`);
   process.exit(0);
 }
 
 const rows = parseCsv(readFileSync(csvPath, 'utf8'));
 const header = rows.shift()?.map((h) => h.trim().toLowerCase()) ?? [];
 const col = (name: string) => header.indexOf(name);
-for (const required of ['name', 'type', 'lat', 'lng']) {
+for (const required of ['name', 'type', 'city', 'lat', 'lng']) {
   if (col(required) === -1) {
     console.error(`CSV header must contain "${required}". Found: ${header.join(',')}`);
     process.exit(1);
@@ -74,6 +77,7 @@ rows.forEach((r, i) => {
   const line = i + 2;
   const name = r[col('name')]?.trim() ?? '';
   const type = r[col('type')]?.trim() as VenueType;
+  const city = r[col('city')]?.trim() as City;
   // Accept decimal commas ("39,93") as well as dots.
   const lat = Number(r[col('lat')]?.trim().replace(',', '.'));
   const lng = Number(r[col('lng')]?.trim().replace(',', '.'));
@@ -81,9 +85,11 @@ rows.forEach((r, i) => {
   if (!name) return problems.push(`line ${line}: empty name, skipped`);
   if (!VENUE_TYPES.includes(type))
     return problems.push(`line ${line} (${name}): invalid type "${type}", skipped`);
+  if (!CITIES.includes(city))
+    return problems.push(`line ${line} (${name}): invalid city "${city}" (allowed: ${CITIES.join(', ')}), skipped`);
   if (!Number.isFinite(lat) || !Number.isFinite(lng))
     return problems.push(`line ${line} (${name}): invalid lat/lng, skipped`);
-  const venue: Venue = { id: uniqueSlug(name, taken), name, type, lat, lng, verified: false };
+  const venue: Venue = { id: uniqueSlug(name, taken), name, type, city, lat, lng, verified: false };
   if (address) venue.address = address;
   venues.push(venue);
 });

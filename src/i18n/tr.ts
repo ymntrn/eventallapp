@@ -1,4 +1,4 @@
-import type { Category, DateFilter, PerformerKind, VenueType } from '../types';
+import type { Category, City, DateFilter, PerformerKind, VenueType } from '../types';
 
 /**
  * All user-facing strings. To add English later, create `en.ts` with the same
@@ -7,7 +7,7 @@ import type { Category, DateFilter, PerformerKind, VenueType } from '../types';
 export const tr = {
   locale: 'tr-TR',
   appName: 'Eventall',
-  tagline: 'Ankara canlı etkinlik haritası',
+  tagline: 'Ankara ve İstanbul canlı etkinlik haritası',
   mapLabel: 'Etkinlik haritası',
 
   loadingData: 'Etkinlikler yükleniyor…',
@@ -53,7 +53,7 @@ export const tr = {
   venueTypes: {
     concert_hall: 'Konser salonu',
     live_music: 'Canlı müzik',
-    electronic: 'Elektronik müzik',
+    electronic: 'Kulüp / elektronik',
     open_air: 'Açık hava',
     festival_ground: 'Festival alanı',
     theater: 'Tiyatro',
@@ -61,7 +61,12 @@ export const tr = {
     classical: 'Klasik müzik',
     arena: 'Arena',
     performance_space: 'Sahne / sanat merkezi',
+    stadium: 'Stadyum',
+    congress_center: 'Kongre / fuar merkezi',
+    cultural_center: 'Kültür merkezi',
   } satisfies Record<VenueType, string>,
+  cities: { Ankara: 'Ankara', İstanbul: 'İstanbul' } satisfies Record<City, string>,
+  cityPickerLabel: 'Şehir',
   performerKinds: {
     band: 'Grup',
     musician: 'Müzisyen',
@@ -87,6 +92,7 @@ export const tr = {
   noEventsAtVenue: 'Bu mekanda seçili filtrelere uyan etkinlik yok.',
   showAllDates: 'Tüm tarihleri göster',
   unverifiedLocation: 'Konum henüz doğrulanmadı',
+  approxLocation: 'Yaklaşık konum: pin tesisin ortasında',
   fromPrice: (formatted: string) => `${formatted}'den`,
   sellers: (n: number) => (n === 1 ? '1 satıcı' : `${n} satıcı`),
   noPrice: 'Fiyat yok',
@@ -104,7 +110,7 @@ export const tr = {
   priceUnknown: 'Fiyat sitede',
   compareNote:
     'Eventall bilet satmaz. Satın alma seçtiğin sitede tamamlanır; fiyat ve stok orada değişebilir.',
-  sampleOffersNote: 'Örnek veri: satıcılar ve fiyatlar gerçek değildir.',
+  sampleOffersNote: 'Örnek etkinlik: satıcılar ve fiyatlar gerçek değildir.',
   performersTitle: 'Sahnede',
   venueTitle: 'Mekan',
   showOnMap: 'Haritada göster',
@@ -171,14 +177,12 @@ export const tr = {
   sectionGeneral: 'Genel',
   defaultDateLabel: 'Varsayılan tarih aralığı',
   cityLabel: 'Şehir',
-  cityValue: 'Ankara',
-  citySoon: 'Diğer şehirler yakında',
   languageLabel: 'Dil',
   languageValue: 'Türkçe',
   languageSoon: 'English yakında',
   notificationsLabel: 'Favori etkinlik hatırlatmaları',
   notificationsHint: 'Prototipte bildirim gönderilmez.',
-  sampleBannerLabel: 'Örnek veri uyarısını göster',
+  sampleBannerLabel: 'Örnek etkinlik uyarısını göster',
   editPreferences: 'Etkinlik tercihlerini düzenle',
   sectionProfile: 'Profil',
   saveProfile: 'Kaydet',
@@ -191,9 +195,16 @@ export const tr = {
   resetYes: 'Evet, sil',
   resetNo: 'Vazgeç',
   resetDone: 'Tüm veriler silindi.',
-  sectionAbout: 'Hakkında',
   aboutText: 'Eventall bir prototiptir. Bilet satmaz; seni resmi satış sitelerine yönlendirir.',
-  mapAttributionNote: 'Harita: OpenFreeMap, © OpenMapTiles, © OpenStreetMap katkıcıları',
+  sectionSources: 'Hakkında / Veri kaynakları',
+  sourceVenues: 'Mekan konumları',
+  sourceVenuesText: '© OpenStreetMap contributors. Veriler Open Database License (ODbL) ile kullanılır.',
+  sourceTiles: 'Harita altlığı',
+  sourceTilesText: 'OpenFreeMap, © OpenMapTiles, © OpenStreetMap contributors.',
+  sourceEvents: 'Etkinlikler',
+  sourceEventsText: 'Şu an örnek veridir; bilet sitelerinden canlı veri henüz alınmıyor.',
+  /** Kept in English: the wording OpenStreetMap asks for. */
+  osmCredit: '© OpenStreetMap contributors',
   version: (v: string) => `Sürüm ${v}`,
 
   // Near me
@@ -202,7 +213,7 @@ export const tr = {
   geoUnsupported: 'Tarayıcın konum özelliğini desteklemiyor.',
   geoDenied: 'Konum izni verilmedi. Tarayıcı ayarlarından izin verebilirsin.',
   geoUnavailable: 'Konumun alınamadı. Daha sonra tekrar dene.',
-  geoOutside: "Ankara dışında görünüyorsun. Harita Ankara'yı göstermeye devam ediyor.",
+  geoOutside: 'Ankara ve İstanbul dışında görünüyorsun. Harita seçili şehri göstermeye devam ediyor.',
   youAreHere: 'Buradasın',
 
   // Search
@@ -214,7 +225,7 @@ export const tr = {
   searchPerformer: 'Sanatçı',
   clearSearch: 'Aramayı temizle',
 
-  sampleDataBanner: 'Örnek veri: etkinlikler, fiyatlar ve konumlar gerçek değildir.',
+  sampleDataBanner: 'Etkinlikler ve fiyatlar örnek veridir.',
   dismiss: 'Kapat',
 } as const;
 

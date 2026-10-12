@@ -1,10 +1,12 @@
 import { useSyncExternalStore } from 'react';
-import { CATEGORIES, type Category, type DateFilter } from '../types';
+import { CATEGORIES, CITIES, type Category, type City, type DateFilter } from '../types';
+import { localUserBackend, type UserBackend } from './user-backend';
 
 /**
- * Client-only app state, persisted to localStorage. There is NO backend yet:
- * "login" just stores a display name and e-mail on this device. Swap these
- * actions for API calls when real accounts exist.
+ * App state for the UI. Changes apply here immediately and are passed on to
+ * the active UserBackend (user-backend.ts). Today that is the localStorage
+ * demo: "login" just stores a display name and e-mail on this device. A
+ * Supabase-auth backend can be dropped in with setUserBackend().
  */
 
 export type ThemeSetting = 'system' | 'light' | 'dark';
@@ -28,6 +30,8 @@ export interface Preferences {
   categories: Category[];
   /** Also show venues with no matching events, as small hollow dots. */
   showAllVenues: boolean;
+  /** City shown on the map. */
+  city: City;
 }
 
 export interface AppState {
@@ -42,14 +46,12 @@ export interface AppState {
   onboarded: boolean;
 }
 
-const KEY = 'eventall.state.v1';
-
 export const DEFAULT_STATE: AppState = {
   user: null,
   favoriteEvents: [],
   favoritePerformers: [],
   attended: [],
-  prefs: { date: 'next7', categories: [], showAllVenues: false },
+  prefs: { date: 'next7', categories: [], showAllVenues: false, city: 'Ankara' },
   settings: { theme: 'system', notifications: true, showSampleBanner: true },
   onboarded: false,
 };
@@ -78,6 +80,7 @@ export function parseState(raw: string | null): AppState {
           (CATEGORIES as readonly string[]).includes(c),
         ),
         showAllVenues: p.prefs?.showAllVenues === true,
+        city: CITIES.find((c) => c === p.prefs?.city) ?? DEFAULT_STATE.prefs.city,
       },
       settings: {
         theme,
@@ -91,25 +94,28 @@ export function parseState(raw: string | null): AppState {
   }
 }
 
-function load(): AppState {
-  try {
-    return parseState(localStorage.getItem(KEY));
-  } catch {
-    return DEFAULT_STATE;
-  }
-}
-
-let state: AppState = typeof window === 'undefined' ? DEFAULT_STATE : load();
+let backend: UserBackend = localUserBackend;
+let state: AppState = typeof window === 'undefined' ? DEFAULT_STATE : parseState(backend.loadCached());
 const listeners = new Set<() => void>();
+let onSyncError: (e: unknown) => void = (e) => console.error('User data sync failed', e);
+
+/** Swaps the user-data backend (e.g. Supabase auth) and reloads its cached state. */
+export function setUserBackend(next: UserBackend, opts: { onSyncError?: (e: unknown) => void } = {}) {
+  backend = next;
+  if (opts.onSyncError) onSyncError = opts.onSyncError;
+  state = parseState(backend.loadCached());
+  listeners.forEach((l) => l());
+}
 
 function set(next: AppState) {
   state = next;
-  try {
-    localStorage.setItem(KEY, JSON.stringify(state));
-  } catch {
-    /* private mode or storage full: keep in memory only */
-  }
+  backend.saveCached(JSON.stringify(state));
   listeners.forEach((l) => l());
+}
+
+/** Runs a backend call after a local change; failures are reported, not thrown. */
+function sync(call: Promise<void>) {
+  call.catch(onSyncError);
 }
 
 function subscribe(l: () => void) {
@@ -128,39 +134,57 @@ export function useAppState(): AppState {
 const toggle = (list: string[], id: string) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
 
 export const actions = {
-  signIn(name: string, email: string) {
-    set({ ...state, user: { name: name.trim(), email: email.trim(), joinedAt: state.user?.joinedAt ?? Date.now() } });
+  /** The password is passed to the backend only (the demo ignores it) and never stored. */
+  signIn(name: string, email: string, password?: string) {
+    const user = { name: name.trim(), email: email.trim(), joinedAt: state.user?.joinedAt ?? Date.now() };
+    set({ ...state, user });
+    sync(backend.signIn(user, password));
   },
   signOut() {
     set({ ...state, user: null });
+    sync(backend.signOut());
   },
   updateProfile(name: string, email: string) {
     if (!state.user) return;
-    set({ ...state, user: { ...state.user, name: name.trim(), email: email.trim() } });
+    const user = { ...state.user, name: name.trim(), email: email.trim() };
+    set({ ...state, user });
+    sync(backend.updateProfile(user));
   },
   toggleFavoriteEvent(id: string) {
     set({ ...state, favoriteEvents: toggle(state.favoriteEvents, id) });
+    sync(backend.setFavoriteEvent(id, state.favoriteEvents.includes(id)));
   },
   toggleFavoritePerformer(id: string) {
     set({ ...state, favoritePerformers: toggle(state.favoritePerformers, id) });
+    sync(backend.setFavoritePerformer(id, state.favoritePerformers.includes(id)));
   },
   toggleAttended(id: string) {
     set({ ...state, attended: toggle(state.attended, id) });
+    sync(backend.setAttended(id, state.attended.includes(id)));
   },
   setPrefs(prefs: Preferences) {
     set({ ...state, prefs, onboarded: true });
+    sync(backend.savePreferences(state.prefs, state.settings));
   },
   setDate(date: DateFilter) {
     set({ ...state, prefs: { ...state.prefs, date } });
+    sync(backend.savePreferences(state.prefs, state.settings));
+  },
+  setCity(city: City) {
+    if (state.prefs.city === city) return;
+    set({ ...state, prefs: { ...state.prefs, city } });
+    sync(backend.savePreferences(state.prefs, state.settings));
   },
   markOnboarded() {
     set({ ...state, onboarded: true });
   },
   setSettings(patch: Partial<Settings>) {
     set({ ...state, settings: { ...state.settings, ...patch } });
+    sync(backend.savePreferences(state.prefs, state.settings));
   },
   /** Removes everything this app stored on the device. */
   resetAll() {
     set(DEFAULT_STATE);
+    sync(backend.reset(state));
   },
 };

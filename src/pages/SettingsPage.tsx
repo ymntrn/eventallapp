@@ -1,5 +1,5 @@
 import { useId, useState, type FormEvent } from 'react';
-import type { DateFilter } from '../types';
+import { CITIES, type City, type DateFilter } from '../types';
 import { actions, useAppState, type ThemeSetting } from '../lib/store';
 import { paths } from '../lib/router';
 import { showToast } from '../lib/toast';
@@ -70,13 +70,16 @@ export function SettingsPage({ onEditPrefs }: { onEditPrefs(): void }) {
               ))}
             </select>
           </label>
-          <div className="row">
-            <span>
-              {t.cityLabel}
-              <span className="row__hint">{t.citySoon}</span>
-            </span>
-            <span className="muted">{t.cityValue}</span>
-          </div>
+          <label className="row">
+            <span>{t.cityLabel}</span>
+            <select className="select" value={state.prefs.city} onChange={(e) => actions.setCity(e.target.value as City)}>
+              {CITIES.map((c) => (
+                <option key={c} value={c}>
+                  {t.cities[c]}
+                </option>
+              ))}
+            </select>
+          </label>
           <div className="row">
             <span>
               {t.languageLabel}
@@ -158,11 +161,32 @@ export function SettingsPage({ onEditPrefs }: { onEditPrefs(): void }) {
 
         <section className="group" aria-labelledby={`${id}-about`}>
           <h2 id={`${id}-about`} className="group__title">
-            {t.sectionAbout}
+            {t.sectionSources}
           </h2>
           <div className="row row--stack">
             <p>{t.aboutText}</p>
-            <p className="muted small">{t.mapAttributionNote}</p>
+          </div>
+          <div className="row row--stack">
+            <span>{t.sourceVenues}</span>
+            <p className="muted small">
+              {t.sourceVenuesText}{' '}
+              <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">
+                openstreetmap.org/copyright
+              </a>
+            </p>
+          </div>
+          <div className="row row--stack">
+            <span>{t.sourceTiles}</span>
+            <p className="muted small">
+              {t.sourceTilesText}{' '}
+              <a href="https://openfreemap.org" target="_blank" rel="noopener">
+                openfreemap.org
+              </a>
+            </p>
+          </div>
+          <div className="row row--stack">
+            <span>{t.sourceEvents}</span>
+            <p className="muted small">{t.sourceEventsText}</p>
             <p className="muted small">{t.version(__APP_VERSION__)}</p>
           </div>
         </section>

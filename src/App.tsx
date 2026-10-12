@@ -48,7 +48,8 @@ export default function App() {
   const showFilters = filtersOpen || onboarding;
 
   const countFor = useCallback(
-    (p: Preferences) => (data ? filterEvents(data.events, { date: p.date, categories: p.categories }, now).length : 0),
+    (p: Preferences) =>
+      data ? filterEvents(data.events, { date: p.date, categories: p.categories, city: p.city }, now).length : 0,
     [data, now],
   );
 

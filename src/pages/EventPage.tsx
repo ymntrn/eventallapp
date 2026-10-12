@@ -1,6 +1,6 @@
 import type { TicketPlatform } from '../types';
 import type { AppData } from '../lib/data';
-import { isAvailable, sortOffers } from '../lib/data';
+import { isAvailable, isSampleEvent, sortOffers } from '../lib/data';
 import { formatDate, formatPrice, formatTime } from '../lib/dates';
 import { navigate, paths } from '../lib/router';
 import { actions, useAppState } from '../lib/store';
@@ -133,7 +133,7 @@ export function EventPage({ data, id }: { data: AppData; id: string }) {
             })}
           </ol>
           <p className="fineprint">{t.compareNote}</p>
-          <p className="fineprint">{t.sampleOffersNote}</p>
+          {isSampleEvent(event) && <p className="fineprint">{t.sampleOffersNote}</p>}
         </section>
 
         <section className="block">

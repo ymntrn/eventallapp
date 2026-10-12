@@ -1,5 +1,6 @@
 /**
- * Read-only check of src/data/venues.json and src/data/events.json.
+ * Read-only check of src/data/venues.json, events.json and performers.json.
+ * Venue coordinates must fall inside their own city's box (src/lib/geo.ts).
  *
  *   npm run validate:data      (also runs automatically before `npm run build`)
  *
@@ -9,14 +10,17 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   CATEGORIES,
+  CITIES,
   TICKET_PLATFORMS,
+  VENUE_PRECISIONS,
   VENUE_TYPES,
   PERFORMER_KINDS,
+  type City,
   type EventsFile,
   type PerformersFile,
   type VenuesFile,
 } from '../src/types.ts';
-import { ANKARA_BOUNDS, distanceMeters, isInAnkara } from '../src/lib/geo.ts';
+import { CITY_BOUNDS, distanceMeters, isInCity } from '../src/lib/geo.ts';
 
 const CLUSTER_DISTANCE_M = 30;
 const ISO_WITH_OFFSET = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?([+-]\d{2}:\d{2}|Z)$/;
@@ -58,18 +62,37 @@ for (const [i, v] of venues.entries()) {
   }
   if (typeof v.name !== 'string' || !v.name.trim()) errors.push(`${where}: missing name`);
   else {
-    const key = v.name.trim().toLocaleLowerCase('tr-TR');
-    if (venueNames.has(key)) errors.push(`${where}: duplicate name "${v.name}" (also ${venueNames.get(key)})`);
+    const key = `${v.city}|${v.name.trim().toLocaleLowerCase('tr-TR')}`;
+    if (venueNames.has(key)) errors.push(`${where}: duplicate name "${v.name}" in ${v.city} (also ${venueNames.get(key)})`);
     venueNames.set(key, v.id);
   }
   if (!(VENUE_TYPES as readonly string[]).includes(v.type))
     errors.push(`${where}: invalid type "${v.type}" (allowed: ${VENUE_TYPES.join(', ')})`);
+  const city = (CITIES as readonly string[]).includes(v.city) ? (v.city as City) : null;
+  if (!city) errors.push(`${where}: unknown city "${v.city}" (allowed: ${CITIES.join(', ')})`);
   if (typeof v.lat !== 'number' || typeof v.lng !== 'number' || Number.isNaN(v.lat) || Number.isNaN(v.lng))
     errors.push(`${where}: lat/lng must be numbers`);
-  else if (!isInAnkara(v.lat, v.lng))
+  else if (city && !isInCity(v.lat, v.lng, city)) {
+    const b = CITY_BOUNDS[city];
     errors.push(
-      `${where}: coordinates ${v.lat}, ${v.lng} outside Ankara box (lat ${ANKARA_BOUNDS.minLat}–${ANKARA_BOUNDS.maxLat}, lng ${ANKARA_BOUNDS.minLng}–${ANKARA_BOUNDS.maxLng})`,
+      `${where}: coordinates ${v.lat}, ${v.lng} outside the ${city} box (lat ${b.minLat}–${b.maxLat}, lng ${b.minLng}–${b.maxLng})`,
     );
+  }
+  if (v.district !== undefined && (typeof v.district !== 'string' || !v.district.trim()))
+    errors.push(`${where}: district must be a non-empty string when set`);
+  if (v.precision !== undefined && !(VENUE_PRECISIONS as readonly string[]).includes(v.precision))
+    errors.push(`${where}: invalid precision "${v.precision}" (allowed: ${VENUE_PRECISIONS.join(', ')})`);
+  if (v.osmUrl !== undefined) {
+    try {
+      const u = new URL(v.osmUrl);
+      if (u.protocol !== 'https:' || u.hostname !== 'www.openstreetmap.org')
+        errors.push(`${where}: osmUrl must be an https://www.openstreetmap.org/… link`);
+    } catch {
+      errors.push(`${where}: osmUrl "${v.osmUrl}" is not a valid URL`);
+    }
+  }
+  if (v.osmId !== undefined && !/^(node|way|relation)\/\d+$/.test(v.osmId))
+    errors.push(`${where}: osmId "${v.osmId}" must look like node/123, way/123 or relation/123`);
   if (typeof v.verified !== 'boolean') errors.push(`${where}: "verified" must be true or false`);
 }
 
@@ -147,6 +170,13 @@ console.log('Eventall data validation');
 console.log('========================');
 console.log(`Venues: ${venues.length}  |  Events: ${events.length}  |  Performers: ${performers.length}  |  Venues with events: ${usedVenues.size}`);
 console.log(`Unverified venues: ${unverified}`);
+for (const c of CITIES) {
+  const inCity = venues.filter((v) => v.city === c);
+  const withEvents = inCity.filter((v) => usedVenues.has(v.id)).length;
+  console.log(`  ${c}: ${inCity.length} venues, ${withEvents} with events`);
+}
+const approx = venues.filter((v) => v.precision === 'complex_centroid').length;
+if (approx > 0) warnings.push(`${approx} venue(s) are complex_centroid (pin is the centre of a larger site); see npm run venues:review`);
 console.log('');
 console.log(`Venues closer than ${CLUSTER_DISTANCE_M} m: ${close.length}`);
 for (const c of close) console.log(`  • ${c}`);

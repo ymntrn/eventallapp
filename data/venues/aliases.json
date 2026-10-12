@@ -1,0 +1,18 @@
+{
+  "_comment": "Venue id → other names ticketing platforms use for it. Matching ignores case, Turkish accents and punctuation, and is done within the venue's city. Add a name here when the importer reports it as unmatched.",
+  "ank-cso-ada-ankara": ["CSO Ada", "CSO Ada Ankara Ana Salon", "Cumhurbaşkanlığı Senfoni Orkestrası"],
+  "ank-congresium-ankara-ato": ["ATO Congresium", "Congresium"],
+  "ank-ankara-devlet-opera-ve-balesi-opera-sahnesi": ["Ankara Opera Sahnesi", "Opera Sahnesi Ankara"],
+  "ank-bilkent-konser-salonu-bso": ["Bilkent Konser Salonu"],
+  "ank-ahmet-adnan-saygun-merkezi": ["AASM"],
+  "ist-zorlu-psm": ["Zorlu Performans Sanatları Merkezi"],
+  "ist-maximum-uniq-hall-box-acikhava": ["Maximum Uniq Hall", "Maximum Uniq Box", "Maximum Uniq Açıkhava", "UNIQ İstanbul"],
+  "ist-cemal-resit-rey-konser-salonu": ["CRR Konser Salonu", "CRR"],
+  "ist-harbiye-cemil-topuzlu-acikhava-tiyatrosu": ["Harbiye Açıkhava", "Cemil Topuzlu Açıkhava Tiyatrosu"],
+  "ank-ankara-arena": ["Ankara Spor Salonu", "Ankara Atatürk Spor Salonu", "Ankara Arena Spor Salonu"],
+  "ank-irfan-sahinbas-atolye-sahnesi": ["Devlet Tiyatroları Atölye Sahnesi", "Atölye Sahnesi", "DT İrfan Şahinbaş Atölye Sahnesi"],
+  "ank-kucuk-tiyatro": ["Devlet Tiyatroları Küçük Tiyatro", "Küçük Tiyatro Ankara"],
+  "ist-fiba-salon-iksv": ["Salon İKSV", "Salon IKSV", "İKSV Salon"],
+  "ist-life-park-konser-ve-etkinlik-alani": ["Life Park", "Lifepark", "Life Park İstanbul"],
+  "ist-jolly-joker-vadistanbul": ["JJ Vadistanbul", "Jolly Joker Vadi"]
+}

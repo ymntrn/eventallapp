@@ -17,8 +17,8 @@ export default defineConfig({
         short_name: 'Eventall',
         description: "Ankara ve İstanbul'daki konser, tiyatro ve festivalleri haritada keşfedin.",
         lang: 'tr',
-        start_url: '/',
-        scope: '/',
+        // start_url and scope default to Vite's `base`, so the same build config
+        // works at a domain root (Vercel/Netlify) and under /eventallapp/ (GitHub Pages).
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#ffffff',

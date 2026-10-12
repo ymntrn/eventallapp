@@ -11,11 +11,12 @@ Ankara	Akün Sahnesi	theatre	N122609769	39.9038757	32.8590584	Çankaya	Remzi Oğ
 Ankara	Tatbikat Sahnesi	theatre	W467577948	39.8985762	32.8578794	Çankaya	Güvenevler Mahallesi	Tatbikat Sahnesi
 Ankara	Çayyolu Cüneyt Gökçer Sahnesi	theatre	W943493300	39.8832427	32.6831897	Çankaya	Koru Mahallesi	Çayyolu Cüneyt Gökçer Sahnesi
 Ankara	Devlet Tiyatroları Pursaklar Sahnesi	theatre	W457992834	40.0698344	32.9214675	Pursaklar	Saray Cumhuriyet Mahallesi	Devlet Tiyatroları Pursaklar Sahnesi
-Ankara	Devlet Tiyatroları Atölye Sahnesi	theatre	N667489374	39.9516066	32.7665074	Yenimahalle	Macun Mahallesi	Devlet Tiyatroları Atölye Sahnesi
+Ankara	İrfan Şahinbaş Atölye Sahnesi	theatre	USER:2026-10-12	39.9520278	32.7668056	Yenimahalle	Macun Mahallesi	
 Ankara	Ankara Sanat Tiyatrosu (AST)	theatre	N1199433530	39.9239662	32.8536199	Çankaya	Kızılay Mahallesi	Ankara Sanat Tiyatrosu
 Ankara	Çankaya Sahne	theatre	N12630068515	39.9012241	32.8576203	Çankaya	Remzi Oğuz Arık Mahallesi	Çankaya Sahne
 Ankara	Quito Sahne	theatre	N12804383601	39.9161273	32.8581431	Çankaya	Kocatepe Mahallesi	Quito Sahne
 Ankara	Farabi Sahnesi	theatre	N4739270327	39.8962202	32.8591748	Çankaya	Çankaya Mahallesi	Farabi Sahnesi
+Ankara	Küçük Tiyatro	theatre	USER:2026-10-12	39.9383330	32.8533330	Altındağ	Hacı Bayram Mahallesi	
 Ankara	IF Performance Hall Ankara	performance_hall	N4619389478	39.9117741	32.8558963	Çankaya	Kavaklıdere Mahallesi	IF Performance Hall
 Ankara	Jolly Joker Ankara	performance_hall	N3093603025	39.9146372	32.8582648	Çankaya	Kavaklıdere Mahallesi	Jolly Joker Ankara
 Ankara	IF Sokak Tunus	live_music_bar	N11203817922	39.9080425	32.8584011	Çankaya	Remzi Oğuz Arık Mahallesi	IF Sokak Tunus
@@ -148,3 +149,6 @@ Ankara	Gençlik Parkı	festival_area	W10711293	39.9372493	32.8496100	Altındağ	
 İstanbul	Kartal Hasan Ali Yücel Kültür Merkezi	cultural_center	W750977630	40.8890738	29.1895307	Kartal	Kordonboyu Mahallesi	Kartal Belediyesi Hasan Ali Yücel Kültür Merkezi
 İstanbul	Altunizade Kültür ve Sanat Merkezi	cultural_center	W733054283	41.0184426	29.0387501	Üsküdar	Altunizade Mahallesi	Altunizade Kültür ve Sanat Merkezi
 İstanbul	Bayrampaşa Mehmet Akif Ersoy Kültür Merkezi	cultural_center	W729521888	41.0431830	28.9127379	Bayrampaşa	Yenidoğan Mahallesi	Bayrampaşa Mehmet Akif Ersoy Kültür Merkezi
+İstanbul	Fiba Salon İKSV	performance_hall	USER:2026-10-12	41.0283330	28.9719440	Beyoğlu	Evliya Çelebi Mahallesi	
+İstanbul	Life Park Konser ve Etkinlik Alanı	open_air	USER:2026-10-12	41.1680000	28.9991111	Sarıyer	Bahçeköy Yeni Mahalle	
+İstanbul	Jolly Joker Vadistanbul	performance_hall	USER:2026-10-12	41.1070000	28.9880000	Sarıyer	Ayazağa Mahallesi	

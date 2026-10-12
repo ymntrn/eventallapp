@@ -1,33 +1,35 @@
 # Missing venues
 
-Searched in OpenStreetMap on 2026-10-10 (Overpass name search in each city, plus Nominatim
-free-text search). Rows are never added with guessed coordinates.
+## Added 2026-10-12 from the project owner's pins
 
-## Resolved
+These were not in OpenStreetMap. The project owner checked each pin on Google Maps; they are
+stored with `precision: point`, `source: Project owner's pin`, and `verified: true` in the app.
 
-| Venue | Result |
-| --- | --- |
-| Ankara Arena | Already in the database as "Ankara Spor Salonu": OSM gives `alt_name=Ankara Arena`, and its Wikidata item and Wikimedia Commons category are "Ankara Arena". Renamed to **Ankara Arena** (id `ank-ankara-arena`); "Ankara Spor Salonu" is now an alias |
+| Venue | Pin | Note |
+| --- | --- | --- |
+| Küçük Tiyatro (Ankara) | 39.938333, 32.853333 | In the Devlet Tiyatroları headquarters building, Ulus |
+| İrfan Şahinbaş Atölye Sahnesi (Ankara) | 39.9520278, 32.7668056 | Same venue as the former "Devlet Tiyatroları Atölye Sahnesi" (OSM node 667489374, about 50 m away). Renamed to its full name and moved to this pin; the old name is an alias |
+| Fiba Salon İKSV (İstanbul) | 41.028333, 28.971944 | Şişhane, Beyoğlu |
+| Life Park Konser ve Etkinlik Alanı (İstanbul) | 41.1680000, 28.9991111 | Bahçeköy, Sarıyer |
+| Jolly Joker Vadistanbul (İstanbul) | 41.1070, 28.9880 | Inside Vadistanbul AVM |
 
-## Still missing (not in OpenStreetMap)
+Ankara Arena was resolved on 2026-10-10: it was already in the database as "Ankara Spor Salonu"
+(OSM `alt_name`, Wikidata). Renamed to Ankara Arena.
 
-**What I need from you:** for each venue, send a Google Maps pin (share link, or the
-`lat, lng` you get by long-pressing the entrance on the map). With a pin the row is added
-with `precision: point` and the source noted.
+## Still missing
 
 | Venue | City | What to send |
 | --- | --- | --- |
-| Küçük Tiyatro | Ankara | Google Maps pin on the Devlet Tiyatroları Küçük Tiyatro building entrance |
-| İrfan Şahinbaş Atölye Sahnesi | Ankara | Google Maps pin on the stage entrance (say if it is the same building as `ank-devlet-tiyatrolari-atolye-sahnesi`) |
-| Saklıkent | Ankara | Google Maps pin on the venue entrance, plus what kind of venue it is |
-| Salon İKSV | İstanbul | Google Maps pin on the Salon İKSV entrance (Şişhane / Beyoğlu) |
-| Lifepark | İstanbul | Google Maps pin on the event/stage area, not the park centre |
-| Jolly Joker Vadistanbul | İstanbul | Google Maps pin on the venue entrance inside Vadistanbul |
+| Saklıkent | Ankara | A Google Maps pin on the venue entrance, plus what kind of venue it is |
 
-Found while searching, not added: a building named **Jolly Joker** at Tema World, Küçükçekmece
-(`way/1545832298`, 41.0509689, 28.7714340). It is a different site from Vadistanbul. Say if you
-want it added.
+Also found while searching, not added: a building named **Jolly Joker** at Tema World, Küçükçekmece
+(`way/1545832298`, 41.0509689, 28.7714340). Say if you want it added.
 
-When a pin arrives: add the row to `venues_osm_source.tsv` (with the OSM id if one exists),
-run `python3 build_venues.py`, update the expected Ankara/İstanbul counts in that script,
-then `npm run import:venues:db`.
+## Adding a venue from a pin
+
+1. Add a row to `venues_osm_source.tsv`: city, name, database type, `USER:<YYYY-MM-DD>`, lat,
+   lng, district, neighbourhood, and an empty last column. If the venue exists in OSM, use its
+   OSM id instead (`N123`/`W123`/`R123`).
+2. Update `EXPECTED` in `build_venues.py`, then `python3 build_venues.py`.
+3. `npm run import:venues:db`, then `npm run venues:review -- --verify <id>` for pins you checked.
+4. `npm run validate:data`, and re-seed Supabase (`docs/backend.md`).

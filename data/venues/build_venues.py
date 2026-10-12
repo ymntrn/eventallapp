@@ -39,6 +39,20 @@ with open(os.path.join(HERE, "venues_osm_source.tsv"), encoding="utf-8") as f:
             district = {"Ankara": "Çankaya"}.get(city, district)
         if district == "Üniversiteler Mahallesi":
             district = "Çankaya"
+        if osm.startswith("USER"):
+            # Pin supplied by the project owner (checked on Google Maps); not from OSM.
+            # Column format: USER:<date the pin was given>
+            pin_date = osm.split(":", 1)[1] if ":" in osm else ""
+            rows.append({
+                "id": f"{'ank' if city == 'Ankara' else 'ist'}-{slug(name)}",
+                "name": name, "type": vtype, "type_label_tr": TYPE_LABEL_TR[vtype],
+                "city": city, "district": district, "neighborhood": hood,
+                "lat": round(float(lat), 7), "lng": round(float(lon), 7),
+                "precision": "point", "precision_note": "Pin provided and checked by the project owner (Google Maps)",
+                "osm_id": None, "osm_name": None, "osm_url": None,
+                "source": "Project owner's pin (Google Maps)", "verified_on": pin_date,
+            })
+            continue
         osm_kind = {"N": "node", "W": "way", "R": "relation"}[osm[0]]
         if name in COMPLEX:
             precision, note = "complex_centroid", COMPLEX[name]
@@ -60,9 +74,10 @@ with open(os.path.join(HERE, "venues_osm_source.tsv"), encoding="utf-8") as f:
 # ---- checks ----
 from collections import Counter
 cnt = Counter(r["city"] for r in rows)
-assert cnt["Ankara"] == 50 and cnt["İstanbul"] == 100, cnt
+EXPECTED = {"Ankara": 51, "İstanbul": 103}  # update when venues are added or removed
+assert dict(cnt) == EXPECTED, cnt
 ids = [r["id"] for r in rows]; assert len(ids) == len(set(ids)), "dup ids"
-osms = [r["osm_id"] for r in rows]; assert len(osms) == len(set(osms)), "dup osm"
+osms = [r["osm_id"] for r in rows if r["osm_id"]]; assert len(osms) == len(set(osms)), "dup osm"
 for r in rows:
     a, b, c, d = CITY_BBOX[r["city"]]
     assert a <= r["lat"] <= c and b <= r["lng"] <= d, r["name"]

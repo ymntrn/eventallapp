@@ -3,7 +3,7 @@
 Eventall is a map-first mobile web app for live events in Ankara and İstanbul: concerts, theater and festivals appear as pins on a map. It is an **aggregator**, like Skyscanner for live events. It does **not** sell tickets. Each event page compares prices across ticket sellers (Biletix, Passo, Biletinial, Bubilet, Mobilet…), and "Siteye git" opens the chosen seller in a new tab.
 
 > **Status: prototype with real venues, sample events.**
-> - **Venues: real.** 150 venues (50 Ankara, 100 İstanbul) from OpenStreetMap, each linked to its OSM object. No pin is human-verified yet (`verified: false`), and 8 pins are the centre of a larger site (`precision: complex_centroid`). See `npm run venues:review` and `data/venues/MISSING.md`.
+> - **Venues: real.** 154 venues (51 Ankara, 103 İstanbul): 149 from OpenStreetMap, each linked to its OSM object, and 5 from pins checked by the project owner (marked `verified: true`). All 149 OSM pins passed an automated check against OpenStreetMap (`data/venues/PIN_CHECK.md`); 7 are the centre of a larger site (`precision: complex_centroid`). See `npm run venues:review` and `data/venues/MISSING.md`.
 > - **Events, performers, sellers and prices: sample data** (`[Örnek]` titles, links to platform homepages). The importer framework exists (`scripts/events/`), but no platform has been confirmed to allow automated access, so its one adapter runs on a fixture (`docs/ticketing-sources.md`).
 > - **Login: demo.** localStorage only, nothing leaves the device. User data goes through a `UserBackend` interface so Supabase Auth can replace it.
 > - **Backend: optional, not provisioned.** Supabase schema, seed and data-source switch are ready (`docs/backend.md`).

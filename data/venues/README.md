@@ -1,7 +1,9 @@
 # Verified venue database (Ankara + İstanbul)
 
-150 venues: 50 in Ankara, 100 in İstanbul. Every coordinate comes from OpenStreetMap
-(looked up 2026-10-09), and every row links to its OSM object so it can be checked.
+154 venues: 51 in Ankara, 103 in İstanbul. 149 coordinates come from OpenStreetMap
+(looked up 2026-10-09), each linked to its OSM object so it can be checked. 5 come from pins
+the project owner checked on Google Maps (2026-10-12); they have `source: Project owner's pin`
+and no OSM fields.
 
 This is the **source database**. The app reads `src/data/venues.json`, which is generated
 from `eventall_venues.json` by `npm run import:venues:db` (see "Using it in the app").
@@ -14,7 +16,7 @@ from `eventall_venues.json` by `npm run import:venues:db` (see "Using it in the 
 | `eventall_venues.json` | Same data as a JSON array |
 | `eventall_venues.csv` | Same data as CSV (UTF-8 with BOM, opens cleanly in Excel) |
 | `eventall_venues.geojson` | Same data as GeoJSON points (drop it on geojson.io to see every pin) |
-| `venues_osm_source.tsv` | The looked-up OSM rows the files are built from |
+| `venues_osm_source.tsv` | The rows the files are built from. Column 4 is the OSM id (`N…`/`W…`/`R…`), or `USER:<date>` for a pin supplied by the project owner |
 | `build_venues.py` | Rebuilds all four files from the TSV and runs the checks: `python3 build_venues.py` |
 
 Venues we could not place yet are listed in [`MISSING.md`](MISSING.md).
@@ -40,12 +42,12 @@ Gençlik Parkı. OpenStreetMap has nothing more specific for them (checked 2026-
 
 ## Checks run by `build_venues.py`
 
-- Exactly 50 Ankara and 100 İstanbul rows
+- Row counts match `EXPECTED` in the script (51 Ankara, 103 İstanbul); update it when adding venues
 - No duplicate ids or OSM objects
 - Every point inside its city's bounding box
 - Pairs closer than 30 m are reported (currently only Kadıköy Sahne / Bade76, 16 m, same street)
 
-On 2026-10-10 all 150 pins were checked against live OpenStreetMap data: every object
+On 2026-10-10 all 150 OSM pins of that time were checked against live OpenStreetMap data: every object
 exists, every name matches and every pin is on its object. See `PIN_CHECK.md`.
 
 ## Using it in the app

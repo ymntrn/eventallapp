@@ -184,18 +184,16 @@
       "verified": false
     },
     {
-      "id": "ank-devlet-tiyatrolari-atolye-sahnesi",
-      "name": "Devlet Tiyatroları Atölye Sahnesi",
+      "id": "ank-irfan-sahinbas-atolye-sahnesi",
+      "name": "İrfan Şahinbaş Atölye Sahnesi",
       "type": "theater",
       "city": "Ankara",
       "district": "Yenimahalle",
       "address": "Macun Mahallesi, Yenimahalle",
-      "lat": 39.9516066,
-      "lng": 32.7665074,
+      "lat": 39.9520278,
+      "lng": 32.7668056,
       "precision": "point",
-      "osmId": "node/667489374",
-      "osmUrl": "https://www.openstreetmap.org/node/667489374",
-      "verified": false
+      "verified": true
     },
     {
       "id": "ank-ankara-sanat-tiyatrosu-ast",
@@ -252,6 +250,18 @@
       "osmId": "node/4739270327",
       "osmUrl": "https://www.openstreetmap.org/node/4739270327",
       "verified": false
+    },
+    {
+      "id": "ank-kucuk-tiyatro",
+      "name": "Küçük Tiyatro",
+      "type": "theater",
+      "city": "Ankara",
+      "district": "Altındağ",
+      "address": "Hacı Bayram Mahallesi, Altındağ",
+      "lat": 39.938333,
+      "lng": 32.853333,
+      "precision": "point",
+      "verified": true
     },
     {
       "id": "ank-if-performance-hall-ankara",
@@ -2100,6 +2110,42 @@
       "osmId": "way/729521888",
       "osmUrl": "https://www.openstreetmap.org/way/729521888",
       "verified": false
+    },
+    {
+      "id": "ist-fiba-salon-iksv",
+      "name": "Fiba Salon İKSV",
+      "type": "live_music",
+      "city": "İstanbul",
+      "district": "Beyoğlu",
+      "address": "Evliya Çelebi Mahallesi, Beyoğlu",
+      "lat": 41.028333,
+      "lng": 28.971944,
+      "precision": "point",
+      "verified": true
+    },
+    {
+      "id": "ist-life-park-konser-ve-etkinlik-alani",
+      "name": "Life Park Konser ve Etkinlik Alanı",
+      "type": "open_air",
+      "city": "İstanbul",
+      "district": "Sarıyer",
+      "address": "Bahçeköy Yeni Mahalle, Sarıyer",
+      "lat": 41.168,
+      "lng": 28.9991111,
+      "precision": "point",
+      "verified": true
+    },
+    {
+      "id": "ist-jolly-joker-vadistanbul",
+      "name": "Jolly Joker Vadistanbul",
+      "type": "live_music",
+      "city": "İstanbul",
+      "district": "Sarıyer",
+      "address": "Ayazağa Mahallesi, Sarıyer",
+      "lat": 41.107,
+      "lng": 28.988,
+      "precision": "point",
+      "verified": true
     }
   ]
 }

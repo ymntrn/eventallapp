@@ -3,15 +3,21 @@ import { useSyncExternalStore } from 'react';
 /**
  * Tiny hash router (no dependency, works on any static host):
  *   #/                 map
+ *   #/discover         Discover tab
+ *   #/calendar         personal calendar
+ *   #/notifications    in-app notifications (empty in Stage 1)
  *   #/event/:id        event page with price comparison
  *   #/performer/:id    performer page
  *   #/venue/:id        map with that venue's sheet open
  *   #/profile[/:tab]   profile (tab: events | people | attended)
  *   #/settings         settings
- *   #/login?next=…     demo sign-in
+ *   #/login?next=…     sign-in / sign-up (Supabase Auth)
  */
 export type Route =
   | { name: 'map'; venueId?: string }
+  | { name: 'discover' }
+  | { name: 'calendar' }
+  | { name: 'notifications' }
   | { name: 'event'; id: string }
   | { name: 'performer'; id: string }
   | { name: 'profile'; tab?: string }
@@ -33,6 +39,12 @@ export function parseRoute(hash: string): Route {
       return { name: 'profile', tab: parts[1] };
     case 'settings':
       return { name: 'settings' };
+    case 'discover':
+      return { name: 'discover' };
+    case 'calendar':
+      return { name: 'calendar' };
+    case 'notifications':
+      return { name: 'notifications' };
     case 'login':
       return { name: 'login', next: params.get('next') ?? undefined };
     default:
@@ -42,6 +54,9 @@ export function parseRoute(hash: string): Route {
 
 export const paths = {
   map: () => '#/',
+  discover: () => '#/discover',
+  calendar: () => '#/calendar',
+  notifications: () => '#/notifications',
   venue: (id: string) => `#/venue/${encodeURIComponent(id)}`,
   event: (id: string) => `#/event/${encodeURIComponent(id)}`,
   performer: (id: string) => `#/performer/${encodeURIComponent(id)}`,

@@ -1,14 +1,15 @@
 import { paths } from '../lib/router';
 import { t } from '../i18n/tr';
 import { Link } from './Link';
-import { IconGear, IconMap, IconUser } from './icons';
+import { IconCompass, IconGear, IconMap, IconUser } from './icons';
 
-export type Tab = 'map' | 'profile' | 'settings' | null;
+export type Tab = 'map' | 'discover' | 'profile' | 'settings' | null;
 
 /** Bottom tab bar on phones, left rail on desktop. */
 export function BottomNav({ current }: { current: Tab }) {
   const items = [
     { key: 'map' as const, href: paths.map(), label: t.navMap, Icon: IconMap },
+    { key: 'discover' as const, href: paths.discover(), label: t.navDiscover, Icon: IconCompass },
     { key: 'profile' as const, href: paths.profile(), label: t.navProfile, Icon: IconUser },
     { key: 'settings' as const, href: paths.settings(), label: t.navSettings, Icon: IconGear },
   ];

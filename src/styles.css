@@ -1839,3 +1839,31 @@ a {
   box-shadow: var(--shadow);
   font-size: 0.85rem;
 }
+
+/* ---------------------------------------------------------------- Stage 1: discover */
+.discover__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.discover__section .section-title {
+  margin-bottom: 4px;
+}
+
+.discover__guest {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+}
+
+.event-row__note {
+  justify-self: start;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+}

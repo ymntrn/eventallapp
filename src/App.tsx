@@ -11,6 +11,7 @@ import { PerformerPage } from './pages/PerformerPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { LoginPage } from './pages/LoginPage';
+import { DiscoverPage } from './pages/DiscoverPage';
 import { BottomNav, type Tab } from './components/BottomNav';
 import { FilterSheet } from './components/FilterSheet';
 
@@ -57,7 +58,11 @@ export default function App() {
   );
 
   const onMap = route.name === 'map';
-  const tab: Tab = onMap ? 'map' : route.name === 'profile' ? 'profile' : route.name === 'settings' ? 'settings' : null;
+  const tab: Tab = onMap
+    ? 'map'
+    : route.name === 'discover' || route.name === 'profile' || route.name === 'settings'
+      ? route.name
+      : null;
 
   return (
     <div className={`app${onMap ? ' app--map' : ''}`}>
@@ -85,6 +90,8 @@ export default function App() {
               <EventPage data={data} id={route.id} />
             ) : route.name === 'performer' ? (
               <PerformerPage data={data} id={route.id} now={now} />
+            ) : route.name === 'discover' ? (
+              <DiscoverPage data={data} now={now} />
             ) : route.name === 'profile' ? (
               <ProfilePage data={data} tab={route.tab} />
             ) : route.name === 'settings' ? (

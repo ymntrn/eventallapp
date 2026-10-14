@@ -11,6 +11,13 @@ describe('parseRoute', () => {
     expect(parseRoute('#/profile/people')).toEqual({ name: 'profile', tab: 'people' });
     expect(parseRoute('#/settings')).toEqual({ name: 'settings' });
     expect(parseRoute('#/nope')).toEqual({ name: 'map' });
+    expect(parseRoute('#/discover')).toEqual({ name: 'discover' });
+    expect(parseRoute('#/calendar')).toEqual({ name: 'calendar' });
+    expect(parseRoute('#/notifications')).toEqual({ name: 'notifications' });
+  });
+
+  it('treats a Supabase token fragment (implicit flow, not used) as the map instead of breaking', () => {
+    expect(parseRoute('#access_token=abc&type=signup')).toEqual({ name: 'map' });
   });
 
   it('round-trips the login return path', () => {

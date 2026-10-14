@@ -1799,3 +1799,43 @@ a {
   border: 1px dashed var(--line);
   border-radius: var(--r-sm);
 }
+
+/* ---------------------------------------------------------------- Stage 1: tonight */
+.chip {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.chip.is-on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.tonight-time {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.tonight-time .select {
+  max-width: none;
+}
+
+.tonight-time--compact {
+  margin-top: 0;
+}
+
+.tonight-time--compact .select {
+  min-height: 34px;
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  font-size: 0.85rem;
+}

@@ -82,6 +82,8 @@ export interface EventFilters {
   categories: Category[];
   /** Only events at venues in this city. Omit for every city. */
   city?: City;
+  /** Start time for the "tonight" filter ("HH:MM"), see tonightWindow(). */
+  tonightFrom?: string | null;
 }
 
 export function filterEvents(
@@ -89,7 +91,7 @@ export function filterEvents(
   filters: EventFilters,
   now: number,
 ): EventWithVenue[] {
-  const range = getDateRange(filters.date, now);
+  const range = getDateRange(filters.date, now, filters.tonightFrom);
   const cats = new Set(filters.categories);
   return events.filter(
     (e) =>

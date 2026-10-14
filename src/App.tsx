@@ -49,7 +49,10 @@ export default function App() {
 
   const countFor = useCallback(
     (p: Preferences) =>
-      data ? filterEvents(data.events, { date: p.date, categories: p.categories, city: p.city }, now).length : 0,
+      data
+        ? filterEvents(data.events, { date: p.date, categories: p.categories, city: p.city, tonightFrom: p.tonightFrom }, now)
+            .length
+        : 0,
     [data, now],
   );
 

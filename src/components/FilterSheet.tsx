@@ -3,6 +3,7 @@ import { CATEGORIES, type Category, type DateFilter } from '../types';
 import type { Preferences } from '../lib/store';
 import { t } from '../i18n/tr';
 import { IconCheck, IconClose } from './icons';
+import { TonightTime } from './TonightTime';
 
 const DATE_FILTERS: DateFilter[] = ['tonight', 'weekend', 'next7', 'all'];
 
@@ -29,7 +30,7 @@ export function FilterSheet({ initial, countFor, onboarding, onApply, onClose }:
       if (e.key === 'Escape') onClose();
       if (e.key === 'Tab' && dialogRef.current) {
         // Keep focus inside the dialog.
-        const f = dialogRef.current.querySelectorAll<HTMLElement>('button:not(:disabled), [href], input');
+        const f = dialogRef.current.querySelectorAll<HTMLElement>('button:not(:disabled), [href], input, select');
         const first = f[0];
         const last = f[f.length - 1];
         if (e.shiftKey && document.activeElement === first) {
@@ -87,6 +88,9 @@ export function FilterSheet({ initial, countFor, onboarding, onApply, onClose }:
               </button>
             ))}
           </div>
+          {draft.date === 'tonight' && (
+            <TonightTime value={draft.tonightFrom} onChange={(v) => setDraft((x) => ({ ...x, tonightFrom: v }))} />
+          )}
         </fieldset>
 
         <fieldset className="field">

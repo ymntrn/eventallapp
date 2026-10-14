@@ -11,6 +11,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:db": "bash scripts/test-db.sh",
     "typecheck": "tsc -b",
     "validate:data": "tsx scripts/validate-data.ts",
     "import:venues": "tsx scripts/import-venues-csv.ts",

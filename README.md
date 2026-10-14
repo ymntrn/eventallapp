@@ -5,22 +5,25 @@ Eventall is a map-first mobile web app for live events in Ankara and İstanbul: 
 > **Status: prototype with real venues, sample events.**
 > - **Venues: real.** 154 venues (51 Ankara, 103 İstanbul): 149 from OpenStreetMap, each linked to its OSM object, and 5 from pins checked by the project owner (marked `verified: true`). All 149 OSM pins passed an automated check against OpenStreetMap (`data/venues/PIN_CHECK.md`); 7 are the centre of a larger site (`precision: complex_centroid`). See `npm run venues:review` and `data/venues/MISSING.md`.
 > - **Events, performers, sellers and prices: sample data** (`[Örnek]` titles, links to platform homepages). The importer framework exists (`scripts/events/`), but no platform has been confirmed to allow automated access, so its one adapter runs on a fixture (`docs/ticketing-sources.md`).
-> - **Login: demo.** localStorage only, nothing leaves the device. User data goes through a `UserBackend` interface so Supabase Auth can replace it.
-> - **Backend: optional, not provisioned.** Supabase schema, seed and data-source switch are ready (`docs/backend.md`).
+> - **Accounts: Supabase Auth (Stage 1), not yet switched on.** E-mail + password, follows, saved events, Discover, calendar, account deletion and export are in the code. The migrations are written but not applied to the live project (`docs/stage1.md`, `docs/stage1-report.md`). Logged-out browsing works as before.
+> - **Backend: Supabase** (`docs/backend.md`). Without the `VITE_SUPABASE_*` variables the app runs read-only on the bundled JSON.
 
-Stack: Vite + React + TypeScript, MapLibre GL JS with OpenFreeMap vector tiles (no API key), plain CSS, JSON data files, PWA via `vite-plugin-pwa`. No other runtime dependencies.
+Stack: Vite + React + TypeScript, MapLibre GL JS with OpenFreeMap vector tiles (no API key), plain CSS, JSON data files, PWA via `vite-plugin-pwa`, `@supabase/supabase-js` for accounts (loaded lazily). No other runtime dependencies.
 
 ## Screens
 
 | Screen | Route | What it does |
 | --- | --- | --- |
-| Map (Keşfet) | `#/`, `#/venue/:id` | Minimal white (or dark) map with black count pins. Search, one filter button, Ankara / İstanbul switch, venue sheet |
+| Map (Harita) | `#/`, `#/venue/:id` | Minimal white (or dark) map with black count pins. Search, one filter button, Ankara / İstanbul switch, "Bu akşam" chip with start-time picker, venue sheet (with "Takip et") |
+| Discover (Keşfet) | `#/discover` | "Sana özel", "Bu hafta sonu", "Yeni keşifler"; "Bu akşam" switches to tonight's list |
+| Calendar | `#/calendar` | "Takvimim": saved events and events of followed artists and venues, by month |
+| Notifications | `#/notifications` | "Bildirimler": in-app list, empty in Stage 1 |
 | Filter pop-up | (modal) | Date range, event types, "show venues without events". Saved as the user's preferences. Shown once on first visit |
-| Event | `#/event/:id` | Date, venue, performers, **price comparison** (cheapest first, sold out last), favorite, "Gittim" |
-| Performer | `#/performer/:id` | Musician/comedian/company, favorite, upcoming events |
-| Profile | `#/profile[/events\|people\|attended]` | Stats, favorite events, favorite performers, attended events |
-| Settings | `#/settings` | Theme (light / dark / system), default date range, city, event preferences, notifications, profile edit, sign out, delete local data, "Hakkında / Veri kaynakları" |
-| Login | `#/login?next=…` | Demo sign-in / sign-up, plus "Demo hesabıyla devam et" |
+| Event | `#/event/:id` | Date, venue, performers, **price comparison** (cheapest first, sold out last), save (heart), follow artist / venue, "Gittim" |
+| Performer | `#/performer/:id` | Musician/comedian/company, "Takip et", upcoming events |
+| Profile | `#/profile[/events\|following\|attended]` | Saved events, followed artists and venues, attended events; links to Takvimim and Bildirimler |
+| Settings | `#/settings` | Theme, default date range, city, event preferences, account (name, city, sign out), "Verilerimi indir (JSON)", "Hesabımı sil", reset device settings, privacy placeholders, "Hakkında / Veri kaynakları" |
+| Login | `#/login?next=…` | Supabase Auth sign-in / sign-up (name, optional city) |
 
 ## Run locally
 
@@ -37,7 +40,8 @@ Other commands:
 | --- | --- |
 | `npm run build` | Validates data, type-checks, and builds to `dist/` |
 | `npm run preview` | Serves the production build (PWA/service worker active) |
-| `npm test` | Vitest unit tests (`src/**` and `scripts/**`: dates, data joins, store, venue import, Supabase mapping, event importer) |
+| `npm test` | Vitest unit tests (`src/**` and `scripts/**`: dates and Tonight window, Discover scoring, calendar, account deletion/export, analytics, data joins, store, venue import, Supabase mapping, event importer) |
+| `npm run test:db` | Migrations, RLS, account deletion and export on a throwaway local Postgres + PostGIS (`docs/stage1.md`) |
 | `npm run validate:data` | Read-only report on `src/data/*.json`. Also runs before every build |
 | `npm run import:venues:db` | Builds `src/data/venues.json` from the OSM venue database `data/venues/eventall_venues.json` |
 | `npm run venues:review` | Lists unverified venues with map links; `-- --verify <id>…` marks pins as checked |
@@ -67,7 +71,8 @@ src/data/*.json ──npm run db:seed──▶ Supabase ──▶ loadData() ─
 ```
 src/
   App.tsx                 routing, theme, data loading, filter pop-up, toasts
-  pages/                  MapPage, EventPage, PerformerPage, ProfilePage, SettingsPage, LoginPage
+  pages/                  MapPage, DiscoverPage, EventPage, PerformerPage, ProfilePage, CalendarPage,
+                          NotificationsPage, SettingsPage, LoginPage
   components/             MapView, VenueSheet (+ EventRow), SearchBox, FilterSheet, BottomNav,
                           FavoriteButton, PageHeader, Link, icons
   data/venues.json        venues, generated from data/venues/ (OSM)
@@ -77,8 +82,15 @@ src/
   lib/data.ts             loadData(), joins, filtering, grouping, minPrice/sortOffers
   lib/supabase-data.ts    Supabase read path (REST, anon key)
   lib/venue-db.ts         database → app venue type mapping
-  lib/store.ts            app state: demo user, favorites, attended, preferences (incl. city), settings
-  lib/user-backend.ts     UserBackend interface + localStorage implementation
+  lib/store.ts            app state: account (user, saved, follows, attended), preferences, settings
+  lib/user-backend.ts     UserBackend: local (signed out) and Supabase (signed in)
+  lib/supabase-client.ts  lazy supabase-js client (PKCE auth)
+  lib/auth.ts             sign-up / sign-in / sign-out, session restore, account loading
+  lib/account.ts          account deletion and data export
+  lib/discover.ts         Discover sections and scoring
+  lib/calendar.ts         personal calendar entries, grouped by month
+  lib/analytics.ts        five tracked actions, VITE_ANALYTICS_ENABLED flag
+  lib/notifications.ts    in-app notifications (read only)
   lib/router.ts           tiny hash router
   lib/theme.ts            light/dark/system theme
   lib/dates.ts            Europe/Istanbul date windows and formatting
@@ -97,8 +109,9 @@ scripts/
 data/
   venues/                 OSM venue database, aliases.json, MISSING.md (see its README)
   venues_source.example.csv
-supabase/migrations/      Postgres + PostGIS schema with RLS
-docs/                     backend.md, ticketing-sources.md, demo-plan.md
+supabase/migrations/      Postgres + PostGIS schema with RLS; Stage 1 user tables and functions
+supabase/tests/           database tests (npm run test:db)
+docs/                     backend.md, deploy.md, stage1.md, stage1-report.md, ticketing-sources.md, demo-plan.md
 ```
 
 ## Venue database
@@ -233,12 +246,12 @@ Both configs serve `sw.js` with `no-cache` so testers receive updates. To instal
 - **Filters.** The map shows only one filter button and a one-line summary ("Önümüzdeki 7 gün, 2 tür"). The pop-up sets date range, event types and whether venues without events appear (as small hollow dots). Choices are saved as preferences in `localStorage` and the pop-up opens once on first visit. When filters change, the map zooms to fit the matching venues, unless a venue is open.
 - **Search.** Covers venues, performers and event titles (also matches performer names on events), ignores Turkish accents. Picking an event or performer opens its page; picking a venue opens its sheet. If that venue has no events in the current filter, the sheet offers "Tüm tarihleri göster" and the venue keeps a marker.
 - **Price comparison.** Cheapest available offer first and highlighted ("En ucuz"); offers without a price next; sold-out offers last and greyed. The venue sheet shows the lowest price and number of sellers for each event.
-- **Accounts (demo).** `src/lib/store.ts` keeps the demo user, favorites (events and performers), attended events, preferences and settings, and hands every change to the active `UserBackend` (`src/lib/user-backend.ts`). Today that is `localUserBackend`: `localStorage` under `eventall.state.v1`. The password field is validated but never stored. Favoriting or "Gittim" while signed out sends you to the login page and back. For real accounts, implement `UserBackend` with Supabase Auth and call `setUserBackend()` (`docs/backend.md`).
+- **Accounts.** Supabase Auth, e-mail + password (`src/lib/auth.ts`, PKCE so the confirmation link's `?code=` does not clash with hash routes). Sign-up creates a private `profiles` row (name, city). Saved events, follows and "Gittim" are rows in owner-only tables, written through `supabaseUserBackend`. Preferences and settings stay in `localStorage` (`eventall.state.v2`). Saving, following or "Gittim" while signed out sends you to the login page and back. Details: `docs/stage1.md`.
 - **Theme.** Light, dark or follow the system (default). Applied via `<html data-theme>`; all colours are CSS variables in `src/styles.css`.
-- **Layout.** Phones: bottom tab bar (Keşfet, Profil, Ayarlar) and a bottom sheet. 768 px and up: left rail. 1024 px and up: venue details in a side panel.
+- **Layout.** Phones: bottom tab bar (Harita, Keşfet, Profil, Ayarlar) and a bottom sheet. 768 px and up: left rail. 1024 px and up: venue details in a side panel.
 - **Time zone.** All date logic uses Europe/Istanbul. Turkey has been on permanent UTC+3 since 2016, so a fixed offset is used (see `src/lib/dates.ts`).
 - **Upcoming.** Events count as upcoming until 1 hour after they start.
-- **"Bu akşam".** Runs from now until 06:00 the next morning. Between 00:00 and 05:59 it means the night already in progress.
+- **"Bu akşam".** Runs from the current time (no grace period) until 06:00 the next morning. Between 00:00 and 05:59 it means the night already in progress. An optional start time (17:00–02:00) moves the start later, never before now (`tonightWindow()` in `src/lib/dates.ts`).
 - **"Bu hafta sonu".** Saturday 00:00 to Monday 06:00. Friday evening is *not* included.
 - **Clustering.** MapLibre GeoJSON clustering (radius 44 px, up to zoom 15), drawn as HTML buttons so they need no glyph server and stay keyboard-focusable.
 - **"Yakınımda".** One low-accuracy position fix. Inside the other city's box it switches city; outside both boxes, or with permission denied, a Turkish message appears and the map stays where it is.
@@ -256,9 +269,9 @@ Needs input from the owner:
 
 Later:
 
-- [ ] **Real accounts.** Supabase Auth behind `UserBackend`, user tables with owner-only RLS, privacy notice / KVKK review first.
+- [ ] **Switch on accounts.** Apply the Stage 1 migrations, configure Auth and SMTP, add the legal texts (`docs/stage1-report.md`, "Needs human action").
 - [ ] **Partnerships** with ticketing platforms (deep links to event pages, affiliate tracking, permission to show prices and images). See `docs/demo-plan.md`.
 - [ ] **English UI.** Add `src/i18n/en.ts` with the same shape as `tr.ts`, plus a language switch and locale-aware formatting.
 - [ ] **Tiles for launch.** OpenFreeMap is free and keyless but community-funded; for production, sponsor it or self-host the same styles (or use a commercial provider).
-- [ ] Real seller logos (with permission), event images (`imageUrl` exists but is not displayed yet), analytics on "Siteye git" clicks.
-- [ ] Notifications for favorite events and performers (the setting exists, nothing is sent yet).
+- [ ] Real seller logos (with permission), event images (`imageUrl` exists but is not displayed yet).
+- [ ] Notifications: something that writes `public.notifications` (e.g. new events by followed artists), then push.

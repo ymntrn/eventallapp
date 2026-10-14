@@ -32,7 +32,8 @@ Everything below describes how it was set up and how to repeat it.
 | `supabase/migrations/20261009120000_init_schema.sql` | Tables `venues` (PostGIS `geography(Point)`, city, type, OSM fields, verified), `performers`, `events`, `event_performers`, `offers`; view `venues_with_coords` (lat/lng as numbers); CHECK constraints mirroring `src/types.ts`, including the per-city boxes; row-level security with a public read policy on every table and no write policies |
 | `scripts/supabase-seed.ts` (`npm run db:seed`) | Writes `supabase/seed.sql` from `src/data/*.json`. Re-runnable (upserts by id, replaces each event's offers and performers). `-- --prune` also deletes events that are no longer in `events.json` |
 | `src/lib/supabase-data.ts` | Read path used by `loadData()` when the env vars are set: Supabase REST API (PostgREST) with the anon key, paged, mapped to the same `AppData` shape |
-| `src/lib/user-backend.ts` | `UserBackend` interface for accounts and user data. Today `localUserBackend` (localStorage demo) |
+| `src/lib/user-backend.ts` | `UserBackend` interface for user data: `localUserBackend` (signed out) and `supabaseUserBackend` (signed in) |
+| `supabase/migrations/20261014…_stage1_*.sql` | Stage 1: profiles, follows, saved/attended events, notifications, analytics, account functions (`docs/stage1.md`) |
 
 The migration and seed were first tested on Postgres 16 + PostGIS 3 with PostgREST in front,
 then applied to the real Supabase project (see Status).
@@ -41,7 +42,8 @@ then applied to the real Supabase project (see Status).
 
 1. A Supabase project (supabase.com → New project). Pick region `eu-central-1`
    (Frankfurt), the closest to Turkey. Save the database password.
-2. Nothing else for read-only data. Auth providers, storage and edge functions are not used.
+2. Nothing else for read-only data. Accounts (Stage 1) also need the Email auth provider and
+   URL configuration described in `docs/stage1.md`. Storage and edge functions are not used.
 
 ## Environment variables
 
@@ -92,16 +94,9 @@ curl "$VITE_SUPABASE_URL/rest/v1/venues_with_coords?select=id,lat,lng&limit=2" \
 Then `npm run dev` with the two `VITE_` variables in `.env.local`. The map should look the
 same as with the bundled JSON.
 
-## Accounts later (not done)
+## Accounts (Stage 1, in the code, not yet applied)
 
-Login stays the localStorage demo. To move to Supabase Auth:
-
-1. Add tables `profiles`, `favorite_events`, `favorite_performers`, `attended_events` and
-   `user_preferences`, keyed by `auth.uid()`, with RLS policies `using (user_id = auth.uid())`
-   for select/insert/delete.
-2. Implement `UserBackend` (`src/lib/user-backend.ts`) with `@supabase/supabase-js`:
-   `signIn` → `auth.signInWithPassword` (pass the password from `LoginPage`, which currently
-   calls `actions.signIn(name, email)` without it), toggles → insert/delete rows, `loadCached`
-   keeps the local copy for the first render.
-3. Call `setUserBackend(supabaseUserBackend, { onSyncError })` in `main.tsx`.
-4. Before collecting real accounts: privacy notice and KVKK review (see README TODO).
+Supabase Auth (e-mail + password) replaced the localStorage demo login. The user tables,
+RLS, account deletion and export are in the five `20261014…_stage1_*.sql` migrations. How to
+apply and configure them: `docs/stage1.md`. Status and open items: `docs/stage1-report.md`.
+Preferences (date filter, categories, city, theme) still live only on the device.

@@ -9,7 +9,7 @@ import { FavoriteButton } from '../components/FavoriteButton';
 import { IconGear } from '../components/icons';
 import { initials } from './EventPage';
 
-const TABS = ['events', 'people', 'attended'] as const;
+const TABS = ['events', 'following', 'attended'] as const;
 type Tab = (typeof TABS)[number];
 
 const joinedFmt = new Intl.DateTimeFormat('tr-TR', { month: 'long', year: 'numeric', timeZone: 'Europe/Istanbul' });
@@ -41,18 +41,19 @@ export function ProfilePage({ data, tab: rawTab }: { data: AppData; tab?: string
     );
   }
 
-  const favEvents = data.events.filter((e) => state.favoriteEvents.includes(e.id));
-  const favPeople = data.performers.filter((p) => state.favoritePerformers.includes(p.id));
+  const savedEvents = data.events.filter((e) => state.savedEvents.includes(e.id));
+  const followedPeople = data.performers.filter((p) => state.followedPerformers.includes(p.id));
+  const followedVenues = data.venues.filter((v) => state.followedVenues.includes(v.id));
   const attended = data.events
     .filter((e) => state.attended.includes(e.id))
     .sort((a, b) => b.startsAtMs - a.startsAtMs);
 
   const stats: [Tab, number, string][] = [
-    ['events', favEvents.length, t.statFavorites],
-    ['people', favPeople.length, t.statPeople],
+    ['events', savedEvents.length, t.statSaved],
+    ['following', followedPeople.length + followedVenues.length, t.statFollowing],
     ['attended', attended.length, t.statAttended],
   ];
-  const tabLabel: Record<Tab, string> = { events: t.tabEvents, people: t.tabPeople, attended: t.tabAttended };
+  const tabLabel: Record<Tab, string> = { events: t.tabEvents, following: t.tabFollowing, attended: t.tabAttended };
 
   return (
     <div className="page">
@@ -64,7 +65,10 @@ export function ProfilePage({ data, tab: rawTab }: { data: AppData; tab?: string
           </span>
           <div>
             <h2 className="hero-person__name">{state.user.name}</h2>
-            <p className="muted">{state.user.email}</p>
+            <p className="muted">
+              {state.user.email}
+              {state.user.city ? `, ${t.cities[state.user.city]}` : ''}
+            </p>
             <p className="muted small">{t.memberSince(joinedFmt.format(state.user.joinedAt))}</p>
           </div>
         </div>
@@ -100,37 +104,66 @@ export function ProfilePage({ data, tab: rawTab }: { data: AppData; tab?: string
 
         <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} className="tabpanel">
           {tab === 'events' &&
-            (favEvents.length === 0 ? (
-              <p className="muted">{t.emptyFavEvents}</p>
+            (savedEvents.length === 0 ? (
+              <p className="muted">{t.emptySaved}</p>
             ) : (
               <ol className="event-rows">
-                {favEvents.map((e) => (
+                {savedEvents.map((e) => (
                   <li key={e.id}>
                     <EventRow event={e} />
                   </li>
                 ))}
               </ol>
             ))}
-          {tab === 'people' &&
-            (favPeople.length === 0 ? (
-              <p className="muted">{t.emptyFavPeople}</p>
+          {tab === 'following' &&
+            (followedPeople.length + followedVenues.length === 0 ? (
+              <p className="muted">{t.emptyFollowing}</p>
             ) : (
-              <ul className="people">
-                {favPeople.map((p) => (
-                  <li key={p.id} className="person">
-                    <Link className="person__link" href={paths.performer(p.id)}>
-                      <span className="avatar" aria-hidden="true">
-                        {initials(p.name)}
-                      </span>
-                      <span>
-                        <span className="person__name">{p.name}</span>
-                        <span className="person__kind">{p.genre ?? t.performerKinds[p.kind]}</span>
-                      </span>
-                    </Link>
-                    <FavoriteButton kind="performer" id={p.id} name={p.name} />
-                  </li>
-                ))}
-              </ul>
+              <>
+                {followedPeople.length > 0 && (
+                  <>
+                    <h3 className="label">{t.followedPerformersTitle}</h3>
+                    <ul className="people">
+                      {followedPeople.map((p) => (
+                        <li key={p.id} className="person">
+                          <Link className="person__link" href={paths.performer(p.id)}>
+                            <span className="avatar" aria-hidden="true">
+                              {initials(p.name)}
+                            </span>
+                            <span>
+                              <span className="person__name">{p.name}</span>
+                              <span className="person__kind">{p.genre ?? t.performerKinds[p.kind]}</span>
+                            </span>
+                          </Link>
+                          <FavoriteButton kind="performer" id={p.id} name={p.name} />
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+                {followedVenues.length > 0 && (
+                  <>
+                    <h3 className="label">{t.followedVenuesTitle}</h3>
+                    <ul className="people">
+                      {followedVenues.map((v) => (
+                        <li key={v.id} className="person">
+                          <Link className="person__link" href={paths.venue(v.id)}>
+                            <span className="avatar" aria-hidden="true">
+                              {initials(v.name)}
+                            </span>
+                            <span>
+                              <span className="person__name">{v.name}</span>
+                              <span className="person__kind">
+                                {t.venueTypes[v.type]}, {t.cities[v.city]}
+                              </span>
+                            </span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </>
             ))}
           {tab === 'attended' &&
             (attended.length === 0 ? (

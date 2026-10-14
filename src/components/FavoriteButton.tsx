@@ -15,7 +15,7 @@ interface Props {
 /** Heart toggle. Signed-out users are sent to the login page and brought back. */
 export function FavoriteButton({ kind, id, name, variant = 'icon' }: Props) {
   const state = useAppState();
-  const list = kind === 'event' ? state.favoriteEvents : state.favoritePerformers;
+  const list = kind === 'event' ? state.savedEvents : state.followedPerformers;
   const on = list.includes(id);
 
   const onClick = () => {
@@ -24,8 +24,8 @@ export function FavoriteButton({ kind, id, name, variant = 'icon' }: Props) {
       navigate(paths.login(window.location.hash || paths.map()));
       return;
     }
-    if (kind === 'event') actions.toggleFavoriteEvent(id);
-    else actions.toggleFavoritePerformer(id);
+    if (kind === 'event') actions.toggleSavedEvent(id);
+    else actions.toggleFollow('performer', id);
   };
 
   const label = `${name}: ${on ? t.removeFavorite : t.addFavorite}`;

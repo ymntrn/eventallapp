@@ -1867,3 +1867,35 @@ a {
   font-size: 0.72rem;
   font-weight: 600;
 }
+
+/* ---------------------------------------------------------------- Stage 1: calendar, notifications */
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.overlay--inline {
+  position: static;
+  padding: 32px 0;
+  background: none;
+}
+
+.notifications {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notification {
+  display: grid;
+  gap: 2px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.notification.is-unread {
+  font-weight: 600;
+}

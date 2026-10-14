@@ -12,6 +12,8 @@ import { ProfilePage } from './pages/ProfilePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { LoginPage } from './pages/LoginPage';
 import { DiscoverPage } from './pages/DiscoverPage';
+import { CalendarPage } from './pages/CalendarPage';
+import { NotificationsPage } from './pages/NotificationsPage';
 import { BottomNav, type Tab } from './components/BottomNav';
 import { FilterSheet } from './components/FilterSheet';
 
@@ -92,6 +94,10 @@ export default function App() {
               <PerformerPage data={data} id={route.id} now={now} />
             ) : route.name === 'discover' ? (
               <DiscoverPage data={data} now={now} />
+            ) : route.name === 'calendar' ? (
+              <CalendarPage data={data} now={now} />
+            ) : route.name === 'notifications' ? (
+              <NotificationsPage />
             ) : route.name === 'profile' ? (
               <ProfilePage data={data} tab={route.tab} />
             ) : route.name === 'settings' ? (

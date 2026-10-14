@@ -6,7 +6,7 @@ import { Link } from '../components/Link';
 import { PageHeader } from '../components/PageHeader';
 import { EventRow } from '../components/VenueSheet';
 import { FollowButton } from '../components/FollowButton';
-import { IconGear } from '../components/icons';
+import { IconBell, IconCalendar, IconGear } from '../components/icons';
 import { initials } from './EventPage';
 
 const TABS = ['events', 'following', 'attended'] as const;
@@ -18,9 +18,14 @@ export function ProfilePage({ data, tab: rawTab }: { data: AppData; tab?: string
   const state = useAppState();
   const tab: Tab = (TABS as readonly string[]).includes(rawTab ?? '') ? (rawTab as Tab) : 'events';
   const settingsLink = (
-    <Link className="icon-btn" href={paths.settings()} aria-label={t.navSettings}>
-      <IconGear />
-    </Link>
+    <>
+      <Link className="icon-btn" href={paths.notifications()} aria-label={t.notificationsLink} title={t.notificationsLink}>
+        <IconBell />
+      </Link>
+      <Link className="icon-btn" href={paths.settings()} aria-label={t.navSettings}>
+        <IconGear />
+      </Link>
+    </>
   );
 
   if (!state.user) {
@@ -72,9 +77,15 @@ export function ProfilePage({ data, tab: rawTab }: { data: AppData; tab?: string
             <p className="muted small">{t.memberSince(joinedFmt.format(state.user.joinedAt))}</p>
           </div>
         </div>
-        <Link className="btn btn--secondary btn--small" href={`${paths.settings()}`}>
-          {t.editProfile}
-        </Link>
+        <div className="profile-actions">
+          <Link className="btn btn--primary btn--small" href={paths.calendar()}>
+            <IconCalendar size={16} />
+            {t.calendarLink}
+          </Link>
+          <Link className="btn btn--secondary btn--small" href={paths.settings()}>
+            {t.editProfile}
+          </Link>
+        </div>
 
         <div className="stats">
           {stats.map(([k, n, label]) => (

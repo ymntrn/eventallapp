@@ -1,7 +1,7 @@
 import type { AppData } from '../lib/data';
 import { paths } from '../lib/router';
 import { t } from '../i18n/tr';
-import { FavoriteButton } from '../components/FavoriteButton';
+import { FollowButton } from '../components/FollowButton';
 import { Link } from '../components/Link';
 import { PageHeader } from '../components/PageHeader';
 import { EventRow } from '../components/VenueSheet';
@@ -40,7 +40,7 @@ export function PerformerPage({ data, id, now }: { data: AppData; id: string; no
             </p>
           </div>
         </div>
-        <FavoriteButton kind="performer" id={performer.id} name={performer.name} variant="pill" />
+        <FollowButton kind="performer" id={performer.id} name={performer.name} />
 
         <section className="block">
           <h2 className="section-title">{t.performerUpcoming}</h2>

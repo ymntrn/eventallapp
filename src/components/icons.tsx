@@ -96,3 +96,34 @@ export const IconChevron = ({ size = 18 }: P) => (
     <path d="M9 5l7 7-7 7" />
   </svg>
 );
+
+export const IconPlus = ({ size = 18 }: P) => (
+  <svg {...base(size)}>
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+
+export const IconCompass = ({ size = 22, filled = false }: P) => (
+  <svg {...base(size)}>
+    <circle cx="12" cy="12" r="8.5" fill={filled ? 'currentColor' : 'none'} />
+    <path
+      d="M15.5 8.5l-2 5-5 2 2-5Z"
+      fill={filled ? 'var(--bg)' : 'none'}
+      stroke={filled ? 'var(--bg)' : 'currentColor'}
+    />
+  </svg>
+);
+
+export const IconCalendar = ({ size = 20 }: P) => (
+  <svg {...base(size)}>
+    <rect x="4" y="5.5" width="16" height="14.5" rx="2" />
+    <path d="M4 10h16M8.5 3.5v4M15.5 3.5v4" />
+  </svg>
+);
+
+export const IconBell = ({ size = 20 }: P) => (
+  <svg {...base(size)}>
+    <path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15Z" />
+    <path d="M10 20.5a2.2 2.2 0 0 0 4 0" />
+  </svg>
+);

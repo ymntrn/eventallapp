@@ -5,6 +5,7 @@ import { formatDate, formatPrice, formatTime } from '../lib/dates';
 import { paths } from '../lib/router';
 import { Link } from './Link';
 import { FavoriteButton } from './FavoriteButton';
+import { FollowButton } from './FollowButton';
 import { IconClose } from './icons';
 
 interface Props {
@@ -48,6 +49,9 @@ export function VenueSheet({ venue, events, onClose, onShowAllDates }: Props) {
               {venue.precision === 'complex_centroid' ? t.approxLocation : t.unverifiedLocation}
             </p>
           )}
+          <div className="sheet__follow">
+            <FollowButton kind="venue" id={venue.id} name={venue.name} />
+          </div>
         </div>
         <button type="button" className="icon-btn" onClick={onClose} aria-label={t.close}>
           <IconClose />
@@ -95,7 +99,7 @@ export function EventRow({ event: e, showVenue = true }: { event: EventWithVenue
           </span>
         </span>
       </Link>
-      <FavoriteButton kind="event" id={e.id} name={e.title} />
+      <FavoriteButton id={e.id} name={e.title} />
     </div>
   );
 }

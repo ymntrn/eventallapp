@@ -7,6 +7,7 @@ import { actions, useAppState } from '../lib/store';
 import { showToast } from '../lib/toast';
 import { t } from '../i18n/tr';
 import { FavoriteButton } from '../components/FavoriteButton';
+import { FollowButton } from '../components/FollowButton';
 import { Link } from '../components/Link';
 import { PageHeader } from '../components/PageHeader';
 import { IconCheck, IconExternal } from '../components/icons';
@@ -45,7 +46,7 @@ export function EventPage({ data, id }: { data: AppData; id: string }) {
 
   return (
     <div className="page">
-      <PageHeader title="" actions={<FavoriteButton kind="event" id={event.id} name={event.title} />} />
+      <PageHeader title="" actions={<FavoriteButton id={event.id} name={event.title} />} />
       <article className="page__body event-page">
         <p className="event-page__cat">{t.categories[event.category]}</p>
         <h1 className="event-page__title">{event.title}</h1>
@@ -60,9 +61,12 @@ export function EventPage({ data, id }: { data: AppData; id: string }) {
             <p className="label">{t.venueTitle}</p>
             <p className="event-page__venue-name">{event.venue.name}</p>
           </div>
-          <Link className="btn btn--secondary btn--small" href={paths.venue(event.venue.id)}>
-            {t.showOnMap}
-          </Link>
+          <div className="event-page__venue-actions">
+            <FollowButton kind="venue" id={event.venue.id} name={event.venue.name} variant="icon" />
+            <Link className="btn btn--secondary btn--small" href={paths.venue(event.venue.id)}>
+              {t.showOnMap}
+            </Link>
+          </div>
         </div>
 
         {event.performers.length > 0 && (
@@ -80,7 +84,7 @@ export function EventPage({ data, id }: { data: AppData; id: string }) {
                       <span className="person__kind">{p.genre ?? t.performerKinds[p.kind]}</span>
                     </span>
                   </Link>
-                  <FavoriteButton kind="performer" id={p.id} name={p.name} />
+                  <FollowButton kind="performer" id={p.id} name={p.name} variant="icon" />
                 </li>
               ))}
             </ul>

@@ -5,7 +5,7 @@ import { t } from '../i18n/tr';
 import { Link } from '../components/Link';
 import { PageHeader } from '../components/PageHeader';
 import { EventRow } from '../components/VenueSheet';
-import { FavoriteButton } from '../components/FavoriteButton';
+import { FollowButton } from '../components/FollowButton';
 import { IconGear } from '../components/icons';
 import { initials } from './EventPage';
 
@@ -135,7 +135,7 @@ export function ProfilePage({ data, tab: rawTab }: { data: AppData; tab?: string
                               <span className="person__kind">{p.genre ?? t.performerKinds[p.kind]}</span>
                             </span>
                           </Link>
-                          <FavoriteButton kind="performer" id={p.id} name={p.name} />
+                          <FollowButton kind="performer" id={p.id} name={p.name} variant="icon" />
                         </li>
                       ))}
                     </ul>
@@ -158,6 +158,7 @@ export function ProfilePage({ data, tab: rawTab }: { data: AppData; tab?: string
                               </span>
                             </span>
                           </Link>
+                          <FollowButton kind="venue" id={v.id} name={v.name} variant="icon" />
                         </li>
                       ))}
                     </ul>

@@ -1756,3 +1756,46 @@ a {
     bottom: 24px;
   }
 }
+
+/* ---------------------------------------------------------------- Stage 1: follows */
+.pill-btn--small {
+  min-height: 36px;
+  padding: 0 14px;
+  gap: 6px;
+  font-size: 0.875rem;
+}
+
+.follow-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin: 2px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--fg);
+}
+
+.follow-icon.is-on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.sheet__follow {
+  margin-top: 10px;
+}
+
+.event-page__venue-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legal-placeholder {
+  padding: 8px 10px;
+  border: 1px dashed var(--line);
+  border-radius: var(--r-sm);
+}

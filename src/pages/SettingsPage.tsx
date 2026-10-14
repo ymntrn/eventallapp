@@ -2,6 +2,8 @@ import { useId, useState, type FormEvent } from 'react';
 import { CITIES, type City, type DateFilter } from '../types';
 import { actions, useAppState, type ThemeSetting, type User } from '../lib/store';
 import { signOut, useAuthStatus } from '../lib/auth';
+import { DELETE_CONFIRM_WORD, deleteAccount, downloadMyData, isDeleteConfirmation } from '../lib/account';
+import { navigate } from '../lib/router';
 import { paths } from '../lib/router';
 import { showToast } from '../lib/toast';
 import { t } from '../i18n/tr';
@@ -127,6 +129,8 @@ export function SettingsPage({ onEditPrefs }: { onEditPrefs(): void }) {
           )}
         </section>
 
+        {user && <AccountData />}
+
         <section className="group" aria-labelledby={`${id}-data`}>
           <h2 id={`${id}-data`} className="group__title">
             {t.sectionData}
@@ -156,6 +160,16 @@ export function SettingsPage({ onEditPrefs }: { onEditPrefs(): void }) {
               <span>{t.resetData}</span>
             </button>
           )}
+        </section>
+
+        <section className="group" aria-labelledby={`${id}-privacy`}>
+          <h2 id={`${id}-privacy`} className="group__title">
+            {t.sectionPrivacy}
+          </h2>
+          <div className="row row--stack">
+            <p className="muted small legal-placeholder">{t.legalPrivacyPlaceholder}</p>
+            <p className="muted small legal-placeholder">{t.legalAnalyticsPlaceholder}</p>
+          </div>
         </section>
 
         <section className="group" aria-labelledby={`${id}-about`}>
@@ -255,5 +269,89 @@ function ProfileForm({ user }: { user: User }) {
         {t.saveProfile}
       </button>
     </form>
+  );
+}
+
+/** KVKK self-service: download my data (JSON) and delete my account. */
+function AccountData() {
+  const [exporting, setExporting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [typed, setTyped] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const id = useId();
+
+  const exportData = async () => {
+    setExporting(true);
+    const ok = await downloadMyData();
+    setExporting(false);
+    showToast(ok ? t.exportDone : t.exportFailed);
+  };
+
+  const remove = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!isDeleteConfirmation(typed)) return setError(t.deleteConfirmWrong(DELETE_CONFIRM_WORD));
+    setError(null);
+    setDeleting(true);
+    const r = await deleteAccount(typed);
+    setDeleting(false);
+    if (!r.ok) return setError(r.reason === 'confirmation' ? t.deleteConfirmWrong(DELETE_CONFIRM_WORD) : t.deleteFailed);
+    showToast(t.deleteDone);
+    navigate(paths.map(), { replace: true });
+  };
+
+  return (
+    <section className="group" aria-labelledby={`${id}-acc`}>
+      <h2 id={`${id}-acc`} className="group__title">
+        {t.sectionAccountData}
+      </h2>
+      <button type="button" className="row row--button" onClick={exportData} disabled={exporting} aria-busy={exporting}>
+        <span>
+          {exporting ? t.pleaseWait : t.exportData}
+          <span className="row__hint">{t.exportHint}</span>
+        </span>
+      </button>
+      {confirmOpen ? (
+        <form className="row row--stack form" onSubmit={remove}>
+          <p>{t.deleteAccountText}</p>
+          <div className="input-group">
+            <label htmlFor={`${id}-confirm`}>{t.deleteConfirmLabel(DELETE_CONFIRM_WORD)}</label>
+            <input
+              id={`${id}-confirm`}
+              className="input"
+              autoComplete="off"
+              autoCapitalize="characters"
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+            />
+          </div>
+          {error && (
+            <p className="form__error" role="alert">
+              {error}
+            </p>
+          )}
+          <div className="row__actions">
+            <button
+              type="button"
+              className="btn btn--secondary btn--small"
+              onClick={() => {
+                setConfirmOpen(false);
+                setTyped('');
+                setError(null);
+              }}
+            >
+              {t.resetNo}
+            </button>
+            <button type="submit" className="btn btn--danger btn--small" disabled={deleting || !isDeleteConfirmation(typed)}>
+              {deleting ? t.pleaseWait : t.deleteConfirmButton}
+            </button>
+          </div>
+        </form>
+      ) : (
+        <button type="button" className="row row--button row--danger" onClick={() => setConfirmOpen(true)}>
+          <span>{t.deleteAccount}</span>
+        </button>
+      )}
+    </section>
   );
 }

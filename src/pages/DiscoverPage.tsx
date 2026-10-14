@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { track } from '../lib/analytics';
 import type { AppData } from '../lib/data';
 import { buildDiscover, tonightList, type Reason, type ScoredEvent } from '../lib/discover';
 import { actions, useAppState } from '../lib/store';
@@ -21,6 +22,7 @@ export function DiscoverPage({ data, now }: { data: AppData; now: number }) {
   const state = useAppState();
   const { city, tonightFrom } = state.prefs;
   const [tonight, setTonight] = useState(false);
+  useEffect(() => track('discover_opened'), []);
   const ctx = useMemo(
     () => ({
       city,

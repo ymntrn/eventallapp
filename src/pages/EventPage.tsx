@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import type { TicketPlatform } from '../types';
+import { track } from '../lib/analytics';
 import type { AppData } from '../lib/data';
 import { isAvailable, isSampleEvent, sortOffers } from '../lib/data';
 import { formatDate, formatPrice, formatTime } from '../lib/dates';
@@ -15,6 +17,10 @@ import { IconCheck, IconExternal } from '../components/icons';
 export function EventPage({ data, id }: { data: AppData; id: string }) {
   const state = useAppState();
   const event = data.events.find((e) => e.id === id);
+
+  useEffect(() => {
+    if (event) track('event_detail_opened', event.id);
+  }, [event?.id]);
 
   if (!event) {
     return (
@@ -125,6 +131,7 @@ export function EventPage({ data, id }: { data: AppData; id: string }) {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={t.goToSellerLabel(platform, price)}
+                      onClick={() => track('buy_link_tapped', event.id)}
                     >
                       {t.goToSeller}
                       <IconExternal size={14} />

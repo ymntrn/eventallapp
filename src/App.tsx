@@ -11,6 +11,9 @@ import { PerformerPage } from './pages/PerformerPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { LoginPage } from './pages/LoginPage';
+import { DiscoverPage } from './pages/DiscoverPage';
+import { CalendarPage } from './pages/CalendarPage';
+import { NotificationsPage } from './pages/NotificationsPage';
 import { BottomNav, type Tab } from './components/BottomNav';
 import { FilterSheet } from './components/FilterSheet';
 
@@ -49,12 +52,19 @@ export default function App() {
 
   const countFor = useCallback(
     (p: Preferences) =>
-      data ? filterEvents(data.events, { date: p.date, categories: p.categories, city: p.city }, now).length : 0,
+      data
+        ? filterEvents(data.events, { date: p.date, categories: p.categories, city: p.city, tonightFrom: p.tonightFrom }, now)
+            .length
+        : 0,
     [data, now],
   );
 
   const onMap = route.name === 'map';
-  const tab: Tab = onMap ? 'map' : route.name === 'profile' ? 'profile' : route.name === 'settings' ? 'settings' : null;
+  const tab: Tab = onMap
+    ? 'map'
+    : route.name === 'discover' || route.name === 'profile' || route.name === 'settings'
+      ? route.name
+      : null;
 
   return (
     <div className={`app${onMap ? ' app--map' : ''}`}>
@@ -82,6 +92,12 @@ export default function App() {
               <EventPage data={data} id={route.id} />
             ) : route.name === 'performer' ? (
               <PerformerPage data={data} id={route.id} now={now} />
+            ) : route.name === 'discover' ? (
+              <DiscoverPage data={data} now={now} />
+            ) : route.name === 'calendar' ? (
+              <CalendarPage data={data} now={now} />
+            ) : route.name === 'notifications' ? (
+              <NotificationsPage />
             ) : route.name === 'profile' ? (
               <ProfilePage data={data} tab={route.tab} />
             ) : route.name === 'settings' ? (

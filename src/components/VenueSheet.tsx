@@ -5,6 +5,7 @@ import { formatDate, formatPrice, formatTime } from '../lib/dates';
 import { paths } from '../lib/router';
 import { Link } from './Link';
 import { FavoriteButton } from './FavoriteButton';
+import { FollowButton } from './FollowButton';
 import { IconClose } from './icons';
 
 interface Props {
@@ -48,6 +49,9 @@ export function VenueSheet({ venue, events, onClose, onShowAllDates }: Props) {
               {venue.precision === 'complex_centroid' ? t.approxLocation : t.unverifiedLocation}
             </p>
           )}
+          <div className="sheet__follow">
+            <FollowButton kind="venue" id={venue.id} name={venue.name} />
+          </div>
         </div>
         <button type="button" className="icon-btn" onClick={onClose} aria-label={t.close}>
           <IconClose />
@@ -75,7 +79,7 @@ export function VenueSheet({ venue, events, onClose, onShowAllDates }: Props) {
 }
 
 /** One tappable event line: date, title, price summary, favorite. Reused on profile and performer pages. */
-export function EventRow({ event: e, showVenue = true }: { event: EventWithVenue; showVenue?: boolean }) {
+export function EventRow({ event: e, showVenue = true, note }: { event: EventWithVenue; showVenue?: boolean; note?: string }) {
   return (
     <div className="event-row">
       <Link className="event-row__link" href={paths.event(e.id)}>
@@ -84,6 +88,7 @@ export function EventRow({ event: e, showVenue = true }: { event: EventWithVenue
           <strong>{formatTime(e.startsAtMs)}</strong>
         </time>
         <span className="event-row__body">
+          {note && <span className="event-row__note">{note}</span>}
           <span className="event-row__title">{e.title}</span>
           <span className="event-row__meta">
             {t.categories[e.category]}
@@ -95,7 +100,7 @@ export function EventRow({ event: e, showVenue = true }: { event: EventWithVenue
           </span>
         </span>
       </Link>
-      <FavoriteButton kind="event" id={e.id} name={e.title} />
+      <FavoriteButton id={e.id} name={e.title} />
     </div>
   );
 }

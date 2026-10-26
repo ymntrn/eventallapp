@@ -5,11 +5,12 @@ import type { Theme } from '../lib/theme';
 import { actions, getState, useAppState } from '../lib/store';
 import { navigate, paths } from '../lib/router';
 import { cityAt } from '../lib/geo';
-import { CITIES } from '../types';
+import { CITIES, type DateFilter } from '../types';
 import { showToast } from '../lib/toast';
 import { t } from '../i18n/tr';
 import { MapView, type MapViewHandle } from '../components/MapView';
 import { SearchBox } from '../components/SearchBox';
+import { TonightTime } from '../components/TonightTime';
 import { VenueSheet } from '../components/VenueSheet';
 import { IconClose, IconLocate, IconSliders } from '../components/icons';
 
@@ -46,8 +47,15 @@ export function MapPage({ data, loadError, onRetry, now, theme, venueId, active,
     [data, now],
   );
   const filtered = useMemo(
-    () => (data ? filterEvents(data.events, { date: prefs.date, categories: prefs.categories, city }, now) : []),
-    [data, prefs.date, prefs.categories, city, now],
+    () =>
+      data
+        ? filterEvents(
+            data.events,
+            { date: prefs.date, categories: prefs.categories, city, tonightFrom: prefs.tonightFrom },
+            now,
+          )
+        : [],
+    [data, prefs.date, prefs.categories, prefs.tonightFrom, city, now],
   );
   const activeVenues = useMemo(() => groupByVenue(filtered), [filtered]);
   const inactiveVenues = useMemo(() => {
@@ -95,7 +103,7 @@ export function MapPage({ data, loadError, onRetry, now, theme, venueId, active,
   }, [city, mapReady, data, activeVenues]);
 
   // When the filters change, bring every matching venue into view.
-  const filterKey = `${prefs.date}|${prefs.categories.join(',')}`;
+  const filterKey = `${prefs.date}|${prefs.categories.join(',')}|${prefs.date === 'tonight' ? prefs.tonightFrom : ''}`;
   const lastKey = useRef(filterKey);
   useEffect(() => {
     if (!mapReady || lastKey.current === filterKey) return;
@@ -135,9 +143,18 @@ export function MapPage({ data, loadError, onRetry, now, theme, venueId, active,
     );
   };
 
+  // "Bu akşam" quick toggle: remembers the date filter it replaced.
+  const beforeTonight = useRef<DateFilter>(prefs.date === 'tonight' ? 'next7' : prefs.date);
+  const tonight = prefs.date === 'tonight';
+  const toggleTonight = () => {
+    if (tonight) return actions.setDate(beforeTonight.current);
+    beforeTonight.current = prefs.date;
+    actions.setDate('tonight');
+  };
+
   const activeFilterCount = (prefs.date !== 'all' ? 1 : 0) + (prefs.categories.length > 0 ? 1 : 0);
   const summary =
-    t.dateFilters[prefs.date] +
+    (tonight && prefs.tonightFrom ? t.tonightFromSummary(prefs.tonightFrom) : t.dateFilters[prefs.date]) +
     ', ' +
     (prefs.categories.length === 0
       ? t.allCategories.toLocaleLowerCase('tr-TR')
@@ -199,6 +216,10 @@ export function MapPage({ data, loadError, onRetry, now, theme, venueId, active,
               </button>
             ))}
           </div>
+          <button type="button" className={`chip${tonight ? ' is-on' : ''}`} aria-pressed={tonight} onClick={toggleTonight}>
+            {t.tonightChip}
+          </button>
+          {tonight && <TonightTime compact value={prefs.tonightFrom} onChange={actions.setTonightFrom} />}
           <button type="button" className="summary-chip" onClick={onOpenFilters}>
             {summary}
           </button>

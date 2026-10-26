@@ -5,39 +5,27 @@ import { showToast } from '../lib/toast';
 import { IconHeart } from './icons';
 
 interface Props {
-  kind: 'event' | 'performer';
   id: string;
   /** Name for the accessible label. */
   name: string;
-  variant?: 'icon' | 'pill';
 }
 
-/** Heart toggle. Signed-out users are sent to the login page and brought back. */
-export function FavoriteButton({ kind, id, name, variant = 'icon' }: Props) {
+/** Heart toggle that saves an event to the account. Signed-out users are sent to the login page and brought back. */
+export function FavoriteButton({ id, name }: Props) {
   const state = useAppState();
-  const list = kind === 'event' ? state.favoriteEvents : state.favoritePerformers;
-  const on = list.includes(id);
+  const on = state.savedEvents.includes(id);
 
-  const onClick = () => {
+  const onClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (!state.user) {
       showToast(t.loginRequired);
       navigate(paths.login(window.location.hash || paths.map()));
       return;
     }
-    if (kind === 'event') actions.toggleFavoriteEvent(id);
-    else actions.toggleFavoritePerformer(id);
+    actions.toggleSavedEvent(id);
   };
 
   const label = `${name}: ${on ? t.removeFavorite : t.addFavorite}`;
-
-  if (variant === 'pill') {
-    return (
-      <button type="button" className={`pill-btn${on ? ' is-on' : ''}`} aria-pressed={on} onClick={onClick}>
-        <IconHeart size={18} filled={on} />
-        {on ? (kind === 'performer' ? t.following : t.favorited) : kind === 'performer' ? t.follow : t.addFavorite}
-      </button>
-    );
-  }
   return (
     <button
       type="button"
@@ -45,10 +33,7 @@ export function FavoriteButton({ kind, id, name, variant = 'icon' }: Props) {
       aria-pressed={on}
       aria-label={label}
       title={label}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick();
-      }}
+      onClick={onClick}
     >
       <IconHeart filled={on} />
     </button>

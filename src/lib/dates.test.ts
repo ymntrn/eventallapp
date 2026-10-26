@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getDateRange, isInRange, ONGOING_GRACE_MS } from './dates';
+import { getDateRange, isInRange, ONGOING_GRACE_MS, tonightWindow } from './dates';
 
 /** Istanbul wall-clock time → epoch ms. */
 const ist = (s: string) => Date.parse(`${s}+03:00`);
@@ -35,18 +35,63 @@ describe('Bu akşam (tonight)', () => {
     expect(r.end).toBe(ist('2026-10-11T06:00:00'));
   });
 
-  it('excludes events that started more than the grace period ago', () => {
+  it('starts at the current time: shows that already started are not included', () => {
     const now = ist('2026-10-09T21:00:00');
-    const r = getDateRange('tonight', now);
-    expect(r.start).toBe(now - ONGOING_GRACE_MS);
-    expect(inRange('tonight', '2026-10-09T21:00:00', '2026-10-09T20:30:00')).toBe(true);
-    expect(inRange('tonight', '2026-10-09T21:00:00', '2026-10-09T19:00:00')).toBe(false);
+    expect(getDateRange('tonight', now).start).toBe(now);
+    expect(inRange('tonight', '2026-10-09T21:00:00', '2026-10-09T21:00:00')).toBe(true);
+    expect(inRange('tonight', '2026-10-09T21:00:00', '2026-10-09T20:59:00')).toBe(false);
   });
 
   it('is independent of the machine time zone (uses Istanbul time)', () => {
     // 22:00 UTC on Oct 9 is 01:00 Istanbul on Oct 10 → still "that night".
     const now = Date.parse('2026-10-09T22:00:00Z');
     expect(getDateRange('tonight', now).end).toBe(ist('2026-10-10T06:00:00'));
+  });
+});
+
+describe('Bu akşam with a start time (tonightWindow)', () => {
+  it('an evening time moves the start to that time today', () => {
+    const now = ist('2026-10-09T16:00:00');
+    expect(tonightWindow(now, '21:00')).toEqual({ start: ist('2026-10-09T21:00:00'), end: ist('2026-10-10T06:00:00') });
+    expect(getDateRange('tonight', now, '21:00')).toEqual(tonightWindow(now, '21:00'));
+  });
+
+  it('an after-midnight time means the next calendar morning of the same night', () => {
+    const now = ist('2026-10-09T16:00:00');
+    expect(tonightWindow(now, '01:00').start).toBe(ist('2026-10-10T01:00:00'));
+    expect(tonightWindow(now, '00:00').start).toBe(ist('2026-10-10T00:00:00'));
+  });
+
+  it('a time already passed does not start the window before now', () => {
+    const now = ist('2026-10-09T22:15:00');
+    expect(tonightWindow(now, '20:00').start).toBe(now);
+    expect(tonightWindow(now, '23:30').start).toBe(ist('2026-10-09T23:30:00'));
+  });
+
+  it('after midnight it stays on the night in progress', () => {
+    const now = ist('2026-10-10T00:30:00');
+    expect(tonightWindow(now, '01:00')).toEqual({ start: ist('2026-10-10T01:00:00'), end: ist('2026-10-10T06:00:00') });
+    // 21:00 of that night is past: start is now.
+    expect(tonightWindow(now, '21:00').start).toBe(now);
+  });
+
+  it('can be empty late at night', () => {
+    const now = ist('2026-10-10T05:30:00');
+    const r = tonightWindow(now, '05:45');
+    expect(r).toEqual({ start: ist('2026-10-10T05:45:00'), end: ist('2026-10-10T06:00:00') });
+  });
+
+  it('ignores a missing or malformed time', () => {
+    const now = ist('2026-10-09T16:00:00');
+    for (const bad of [null, undefined, '', '9:00', '25:00', '21:75', 'abc']) {
+      expect(tonightWindow(now, bad)).toEqual({ start: now, end: ist('2026-10-10T06:00:00') });
+    }
+  });
+
+  it('uses Istanbul time whatever the machine time zone', () => {
+    // 15:00 UTC = 18:00 Istanbul.
+    const now = Date.parse('2026-10-09T15:00:00Z');
+    expect(tonightWindow(now, '20:00').start).toBe(Date.parse('2026-10-09T17:00:00Z'));
   });
 });
 

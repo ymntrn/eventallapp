@@ -1756,3 +1756,146 @@ a {
     bottom: 24px;
   }
 }
+
+/* ---------------------------------------------------------------- Stage 1: follows */
+.pill-btn--small {
+  min-height: 36px;
+  padding: 0 14px;
+  gap: 6px;
+  font-size: 0.875rem;
+}
+
+.follow-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin: 2px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--fg);
+}
+
+.follow-icon.is-on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.sheet__follow {
+  margin-top: 10px;
+}
+
+.event-page__venue-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legal-placeholder {
+  padding: 8px 10px;
+  border: 1px dashed var(--line);
+  border-radius: var(--r-sm);
+}
+
+/* ---------------------------------------------------------------- Stage 1: tonight */
+.chip {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.chip.is-on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.tonight-time {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.tonight-time .select {
+  max-width: none;
+}
+
+.tonight-time--compact {
+  margin-top: 0;
+}
+
+.tonight-time--compact .select {
+  min-height: 34px;
+  border-radius: 999px;
+  box-shadow: var(--shadow);
+  font-size: 0.85rem;
+}
+
+/* ---------------------------------------------------------------- Stage 1: discover */
+.discover__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.discover__section .section-title {
+  margin-bottom: 4px;
+}
+
+.discover__guest {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+}
+
+.event-row__note {
+  justify-self: start;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------- Stage 1: calendar, notifications */
+.profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.overlay--inline {
+  position: static;
+  padding: 32px 0;
+  background: none;
+}
+
+.notifications {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.notification {
+  display: grid;
+  gap: 2px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.notification.is-unread {
+  font-weight: 600;
+}

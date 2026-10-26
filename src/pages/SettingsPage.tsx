@@ -1,6 +1,9 @@
 import { useId, useState, type FormEvent } from 'react';
 import { CITIES, type City, type DateFilter } from '../types';
-import { actions, useAppState, type ThemeSetting } from '../lib/store';
+import { actions, useAppState, type ThemeSetting, type User } from '../lib/store';
+import { signOut, useAuthStatus } from '../lib/auth';
+import { DELETE_CONFIRM_WORD, deleteAccount, downloadMyData, isDeleteConfirmation } from '../lib/account';
+import { navigate } from '../lib/router';
 import { paths } from '../lib/router';
 import { showToast } from '../lib/toast';
 import { t } from '../i18n/tr';
@@ -19,6 +22,7 @@ export function SettingsPage({ onEditPrefs }: { onEditPrefs(): void }) {
   const state = useAppState();
   const { settings, user } = state;
   const [confirmReset, setConfirmReset] = useState(false);
+  const authStatus = useAuthStatus();
   const id = useId();
 
   return (
@@ -88,12 +92,6 @@ export function SettingsPage({ onEditPrefs }: { onEditPrefs(): void }) {
             <span className="muted">{t.languageValue}</span>
           </div>
           <Toggle
-            label={t.notificationsLabel}
-            hint={t.notificationsHint}
-            checked={settings.notifications}
-            onChange={(v) => actions.setSettings({ notifications: v })}
-          />
-          <Toggle
             label={t.sampleBannerLabel}
             checked={settings.showSampleBanner}
             onChange={(v) => actions.setSettings({ showSampleBanner: v })}
@@ -105,7 +103,22 @@ export function SettingsPage({ onEditPrefs }: { onEditPrefs(): void }) {
             {t.sectionProfile}
           </h2>
           {user ? (
-            <ProfileForm key={user.email} name={user.name} email={user.email} />
+            <>
+              <ProfileForm key={user.id} user={user} />
+              <button
+                type="button"
+                className="row row--button"
+                onClick={() => {
+                  void signOut().then(() => showToast(t.signedOut));
+                }}
+              >
+                <span>{t.signOut}</span>
+              </button>
+            </>
+          ) : authStatus === 'unavailable' ? (
+            <div className="row">
+              <span className="muted">{t.accountsUnavailable}</span>
+            </div>
           ) : (
             <div className="row">
               <span className="muted">{t.profileGuestTitle}</span>
@@ -116,22 +129,12 @@ export function SettingsPage({ onEditPrefs }: { onEditPrefs(): void }) {
           )}
         </section>
 
+        {user && <AccountData />}
+
         <section className="group" aria-labelledby={`${id}-data`}>
           <h2 id={`${id}-data`} className="group__title">
             {t.sectionData}
           </h2>
-          {user && (
-            <button
-              type="button"
-              className="row row--button"
-              onClick={() => {
-                actions.signOut();
-                showToast(t.signedOut);
-              }}
-            >
-              <span>{t.signOut}</span>
-            </button>
-          )}
           {confirmReset ? (
             <div className="row row--stack" role="alert">
               <span>{t.resetConfirm}</span>
@@ -143,7 +146,7 @@ export function SettingsPage({ onEditPrefs }: { onEditPrefs(): void }) {
                   type="button"
                   className="btn btn--danger btn--small"
                   onClick={() => {
-                    actions.resetAll();
+                    actions.resetDevice();
                     setConfirmReset(false);
                     showToast(t.resetDone);
                   }}
@@ -157,6 +160,16 @@ export function SettingsPage({ onEditPrefs }: { onEditPrefs(): void }) {
               <span>{t.resetData}</span>
             </button>
           )}
+        </section>
+
+        <section className="group" aria-labelledby={`${id}-privacy`}>
+          <h2 id={`${id}-privacy`} className="group__title">
+            {t.sectionPrivacy}
+          </h2>
+          <div className="row row--stack">
+            <p className="muted small legal-placeholder">{t.legalPrivacyPlaceholder}</p>
+            <p className="muted small legal-placeholder">{t.legalAnalyticsPlaceholder}</p>
+          </div>
         </section>
 
         <section className="group" aria-labelledby={`${id}-about`}>
@@ -207,17 +220,17 @@ function Toggle({ label, hint, checked, onChange }: { label: string; hint?: stri
   );
 }
 
-function ProfileForm({ name: initialName, email: initialEmail }: { name: string; email: string }) {
-  const [name, setName] = useState(initialName);
-  const [email, setEmail] = useState(initialEmail);
+function ProfileForm({ user }: { user: User }) {
+  const [name, setName] = useState(user.name);
+  const [city, setCity] = useState<City | ''>(user.city ?? '');
   const id = useId();
-  const dirty = name !== initialName || email !== initialEmail;
-  const valid = name.trim() !== '' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const dirty = name !== user.name || (city || null) !== user.city;
+  const valid = name.trim() !== '' && name.trim().length <= 60;
 
   const save = (e: FormEvent) => {
     e.preventDefault();
     if (!valid) return;
-    actions.updateProfile(name, email);
+    actions.updateProfile(name, city || null);
     showToast(t.profileSaved);
   };
 
@@ -225,22 +238,120 @@ function ProfileForm({ name: initialName, email: initialEmail }: { name: string;
     <form className="row row--stack form" onSubmit={save}>
       <div className="input-group">
         <label htmlFor={`${id}-n`}>{t.nameLabel}</label>
-        <input id={`${id}-n`} className="input" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
+        <input
+          id={`${id}-n`}
+          className="input"
+          value={name}
+          maxLength={60}
+          onChange={(e) => setName(e.target.value)}
+          autoComplete="name"
+        />
+      </div>
+      <div className="input-group">
+        <label htmlFor={`${id}-c`}>{t.cityOptionalLabel}</label>
+        <select id={`${id}-c`} className="select input" value={city} onChange={(e) => setCity(e.target.value as City | '')}>
+          <option value="">{t.cityNone}</option>
+          {CITIES.map((c) => (
+            <option key={c} value={c}>
+              {t.cities[c]}
+            </option>
+          ))}
+        </select>
       </div>
       <div className="input-group">
         <label htmlFor={`${id}-e`}>{t.emailLabel}</label>
-        <input
-          id={`${id}-e`}
-          className="input"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          autoComplete="email"
-        />
+        <input id={`${id}-e`} className="input" type="email" value={user.email} readOnly aria-describedby={`${id}-eh`} />
+        <span id={`${id}-eh`} className="row__hint">
+          {t.emailHint}
+        </span>
       </div>
       <button type="submit" className="btn btn--primary btn--small" disabled={!dirty || !valid}>
         {t.saveProfile}
       </button>
     </form>
+  );
+}
+
+/** KVKK self-service: download my data (JSON) and delete my account. */
+function AccountData() {
+  const [exporting, setExporting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [typed, setTyped] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const id = useId();
+
+  const exportData = async () => {
+    setExporting(true);
+    const ok = await downloadMyData();
+    setExporting(false);
+    showToast(ok ? t.exportDone : t.exportFailed);
+  };
+
+  const remove = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!isDeleteConfirmation(typed)) return setError(t.deleteConfirmWrong(DELETE_CONFIRM_WORD));
+    setError(null);
+    setDeleting(true);
+    const r = await deleteAccount(typed);
+    setDeleting(false);
+    if (!r.ok) return setError(r.reason === 'confirmation' ? t.deleteConfirmWrong(DELETE_CONFIRM_WORD) : t.deleteFailed);
+    showToast(t.deleteDone);
+    navigate(paths.map(), { replace: true });
+  };
+
+  return (
+    <section className="group" aria-labelledby={`${id}-acc`}>
+      <h2 id={`${id}-acc`} className="group__title">
+        {t.sectionAccountData}
+      </h2>
+      <button type="button" className="row row--button" onClick={exportData} disabled={exporting} aria-busy={exporting}>
+        <span>
+          {exporting ? t.pleaseWait : t.exportData}
+          <span className="row__hint">{t.exportHint}</span>
+        </span>
+      </button>
+      {confirmOpen ? (
+        <form className="row row--stack form" onSubmit={remove}>
+          <p>{t.deleteAccountText}</p>
+          <div className="input-group">
+            <label htmlFor={`${id}-confirm`}>{t.deleteConfirmLabel(DELETE_CONFIRM_WORD)}</label>
+            <input
+              id={`${id}-confirm`}
+              className="input"
+              autoComplete="off"
+              autoCapitalize="characters"
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+            />
+          </div>
+          {error && (
+            <p className="form__error" role="alert">
+              {error}
+            </p>
+          )}
+          <div className="row__actions">
+            <button
+              type="button"
+              className="btn btn--secondary btn--small"
+              onClick={() => {
+                setConfirmOpen(false);
+                setTyped('');
+                setError(null);
+              }}
+            >
+              {t.resetNo}
+            </button>
+            <button type="submit" className="btn btn--danger btn--small" disabled={deleting || !isDeleteConfirmation(typed)}>
+              {deleting ? t.pleaseWait : t.deleteConfirmButton}
+            </button>
+          </div>
+        </form>
+      ) : (
+        <button type="button" className="row row--button row--danger" onClick={() => setConfirmOpen(true)}>
+          <span>{t.deleteAccount}</span>
+        </button>
+      )}
+    </section>
   );
 }

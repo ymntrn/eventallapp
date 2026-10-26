@@ -32,27 +32,48 @@ function istanbulWeekday(ms: number): number {
   return new Date(ms + ISTANBUL_OFFSET_MS).getUTCDay();
 }
 
+/** Start times offered by the "Bu akşam" picker (Istanbul). 00:00–05:59 means after midnight. */
+export const TONIGHT_START_TIMES = ['17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00', '00:00', '01:00', '02:00'];
+
+/**
+ * "Bu akşam" (Tonight): events starting from the current Istanbul time until
+ * 06:00 the next morning. Between 00:00 and 05:59 "tonight" is the night
+ * already in progress, so the window ends at 06:00 the same morning.
+ *
+ * `from` ("HH:MM", optional) moves the start to that time on the same night:
+ * 17:00–23:59 is the evening, 00:00–05:59 is after midnight. A time that has
+ * already passed has no effect (the window never starts before now). Unlike
+ * the other filters there is no grace period for shows that already started.
+ */
+export function tonightWindow(now: number, from?: string | null): TimeRange {
+  const logicalDay = istanbulMidnight(now - NIGHT_END_HOUR * HOUR);
+  const end = logicalDay + DAY + NIGHT_END_HOUR * HOUR;
+  const m = from ? /^(\d{2}):(\d{2})$/.exec(from) : null;
+  if (!m) return { start: now, end };
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  if (h > 23 || min > 59) return { start: now, end };
+  const picked = logicalDay + (h < NIGHT_END_HOUR ? DAY : 0) + h * HOUR + min * 60_000;
+  return { start: Math.max(now, picked), end };
+}
+
 /**
  * Time window for a date filter, evaluated at `now` (Istanbul time).
  *
- * - tonight: from now until 06:00 the next morning. Between 00:00 and 05:59 it
- *   means the night already in progress (ends 06:00 today).
+ * - tonight: see tonightWindow(); `tonightFrom` is its optional start time.
  * - weekend: Saturday 00:00 → Monday 06:00. On Saturday/Sunday (and Monday
  *   before 06:00) it is the current weekend starting now; otherwise the next one.
  * - next7: now → now + 7 days.
  * - all: now → open-ended.
  *
- * "now" always subtracts ONGOING_GRACE_MS so that a show that started a few
- * minutes ago is still listed.
+ * Except for tonight, "now" subtracts ONGOING_GRACE_MS so that a show that
+ * started a few minutes ago is still listed.
  */
-export function getDateRange(filter: DateFilter, now: number): TimeRange {
+export function getDateRange(filter: DateFilter, now: number, tonightFrom?: string | null): TimeRange {
   const from = now - ONGOING_GRACE_MS;
   switch (filter) {
-    case 'tonight': {
-      // Shift back by NIGHT_END_HOUR so 00:00–05:59 belongs to the previous evening.
-      const logicalDay = istanbulMidnight(now - NIGHT_END_HOUR * HOUR);
-      return { start: from, end: logicalDay + DAY + NIGHT_END_HOUR * HOUR };
-    }
+    case 'tonight':
+      return tonightWindow(now, tonightFrom);
     case 'weekend': {
       const shifted = now - NIGHT_END_HOUR * HOUR;
       const logicalDay = istanbulMidnight(shifted);
